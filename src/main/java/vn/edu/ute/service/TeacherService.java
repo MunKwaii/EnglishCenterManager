@@ -6,9 +6,12 @@ import java.util.List;
 
 public interface TeacherService {
     List<Teacher> findBySpecialty(String specialty);
-    boolean isMailExist(String mail);
+    boolean isEmailExists(String mail);
     List<String> getAllTeacherNames();
     Teacher findByPhone(String phone);
     long countActiveTeachers();
     List<Teacher> getSortedTeachers();
+    void addTeacher(Teacher t) throws Exception;
+    void deleteTeacher(Long id) throws Exception;
+    List<Teacher> getAllTeachers();
 }
