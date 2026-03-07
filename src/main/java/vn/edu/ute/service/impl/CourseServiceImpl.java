@@ -22,16 +22,20 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    public Course updateCourse(Course course) {
+        return courseRepo.save(course);
+    }
+
+    @Override
     public boolean removeCourse(Long id) {
         return courseRepo.delete(id);
     }
 
-
-
     @Override
     public List<Course> searchCourseByName(String keyword) {
         List<Course> allCourses = courseRepo.findAll();
-        if (allCourses == null) return List.of();
+        if (allCourses == null)
+            return List.of();
 
         return allCourses.stream()
                 .filter(c -> c.getCourseName().toLowerCase().contains(keyword.toLowerCase())) // tìm theo tn
@@ -41,7 +45,8 @@ public class CourseServiceImpl implements CourseService {
     @Override
     public List<Course> getCoursesByLevel(String level) {
         List<Course> allCourses = courseRepo.findAll();
-        if (allCourses == null) return List.of();
+        if (allCourses == null)
+            return List.of();
 
         return allCourses.stream()
                 .filter(c -> c.getLevel().name().equalsIgnoreCase(level)) // Tiìm theo level
