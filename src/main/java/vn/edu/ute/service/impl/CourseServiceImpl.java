@@ -17,6 +17,16 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    public List<Course> getActiveCourses() {
+        List<Course> allCourses = courseRepo.findAll();
+        if (allCourses == null)
+            return java.util.List.of();
+        return allCourses.stream()
+                .filter(c -> c.getStatus() == vn.edu.ute.model.enums.Status.Active)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Course addCourse(Course course) {
         return courseRepo.save(course);
     }

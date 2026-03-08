@@ -51,4 +51,9 @@ public class Teacher {
 
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
+
+    @Override
+    public String toString() {
+        return fullName != null ? fullName : "Teacher ID: " + teacherId;
+    }
 }

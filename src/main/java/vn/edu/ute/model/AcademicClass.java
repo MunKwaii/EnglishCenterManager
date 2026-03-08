@@ -25,15 +25,15 @@ public class AcademicClass {
     // --- MỐI QUAN HỆ KHÓA NGOẠI ---
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "course_id", nullable = false) // Khóa ngoại tới bảng courses
+    @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "teacher_id") // Khóa ngoại tới bảng teachers (có thể NULL theo SQL)
+    @JoinColumn(name = "teacher_id")
     private Teacher teacher;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "room_id") // Khóa ngoại tới bảng rooms (có thể NULL theo SQL)
+    @JoinColumn(name = "room_id")
     private Room room;
 
     // ------------------------------
@@ -61,4 +61,5 @@ public class AcademicClass {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "branch_id")
     private Branch branch;
+
 }

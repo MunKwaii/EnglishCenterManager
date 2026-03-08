@@ -6,6 +6,8 @@ import java.util.List;
 public interface CourseService {
     List<Course> getAllCourses();
 
+    List<Course> getActiveCourses();
+
     Course addCourse(Course course);
 
     Course updateCourse(Course course);
