@@ -41,4 +41,9 @@ public class Room {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "branch_id")
     private Branch branch;
+
+    @Override
+    public String toString() {
+        return roomName;
+    }
 }
