@@ -173,11 +173,11 @@ public class NotificationPanel extends JPanel {
                         .content(taContent.getText())
                         .targetRole((NotificationTargetRole) cbTargetRole.getSelectedItem())
                         .build();
-                notificationService.createNotification(n); // Save xử lý cả update
+                notificationService.updateNotification(n); // Gọi updateNotification() riêng biệt
                 JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
                 refreshUI();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Lỗi cập nhật!");
+                JOptionPane.showMessageDialog(this, "Lỗi cập nhật: " + ex.getMessage());
             }
         });
 

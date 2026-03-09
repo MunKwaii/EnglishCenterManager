@@ -87,12 +87,35 @@ public class NotificationServiceImpl implements NotificationService {
         if (n.getContent() == null || n.getContent().trim().isEmpty()) {
             throw new Exception("Nội dung thông báo không được để trống!");
         }
-        repo.save(n); //
+        repo.save(n);
+    }
+
+    @Override
+    public void updateNotification(Notification n) throws Exception {
+        // Kiểm tra notification có tồn tại không
+        if (n.getNotificationId() == null) {
+            throw new Exception("Không tìm thấy ID thông báo để cập nhật!");
+        }
+
+        var existing = repo.findById(n.getNotificationId());
+        if (existing.isEmpty()) {
+            throw new Exception("Thông báo không tồn tại trong hệ thống!");
+        }
+
+        // Validation
+        if (n.getTitle() == null || n.getTitle().trim().isEmpty()) {
+            throw new Exception("Tiêu đề không được để trống!");
+        }
+        if (n.getContent() == null || n.getContent().trim().isEmpty()) {
+            throw new Exception("Nội dung thông báo không được để trống!");
+        }
+
+        repo.update(n);
     }
 
     @Override
     public void deleteNotification(Long id) throws Exception {
-        repo.deleteById(id); //
+        repo.deleteById(id);
     }
 
     @Override

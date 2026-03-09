@@ -6,6 +6,7 @@ import java.util.Optional;
 
 public interface NotificationRepository {
     void save(Notification notification);
+    void update(Notification notification);
     Optional<Notification> findById(Long id);
     List<Notification> findAll();
     void deleteById(Long id);

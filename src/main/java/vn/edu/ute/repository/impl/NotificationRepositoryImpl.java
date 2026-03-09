@@ -21,15 +21,23 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     public void save(Notification notification) {
         try {
             txManager.runInTransaction(em -> {
-                if (notification.getNotificationId() == null) {
-                    em.persist(notification); // Thêm thông báo mới
-                } else {
-                    em.merge(notification);   // Cập nhật thông báo cũ
-                }
+                em.persist(notification); // Chỉ thêm mới
                 return null;
             });
         } catch (Exception e) {
             throw new RuntimeException("Lỗi khi lưu thông báo: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void update(Notification notification) {
+        try {
+            txManager.runInTransaction(em -> {
+                em.merge(notification); // Chỉ cập nhật
+                return null;
+            });
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi cập nhật thông báo: " + e.getMessage(), e);
         }
     }
 
