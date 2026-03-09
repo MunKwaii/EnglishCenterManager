@@ -15,7 +15,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     public boolean login(String username, String password) {
         return repo.findByUsername(username)
-                .filter(u -> PasswordUtil.check(password, u.getPasswordHash()))
+                .filter(u -> PasswordUtil.check(password, u.getPasswordHash())) // Gọi BCrypt checkpw ở đây
                 .map(u -> {
                     UserSession.login(u);
                     return true;
@@ -52,7 +52,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         repo.deleteById(id);
     }
 
-    // --- CÁC HÀM LAMBDA (Giữ nguyên phong cách cũ) ---
+    // --- CÁC HÀM LAMBDA  ---
     @Override
     public List<UserAccount> filterByRole(vn.edu.ute.model.enums.UserRole role) {
         return repo.findAll().stream()
