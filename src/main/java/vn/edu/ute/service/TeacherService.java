@@ -11,6 +11,7 @@ public interface TeacherService {
     long countActiveTeachers();
     List<Teacher> getSortedTeachers();
     void addTeacher(Teacher t) throws Exception;
+    void updateTeacher(Teacher t) throws Exception;
     void deleteTeacher(Long id) throws Exception;
     List<Teacher> getAllTeachers();
     List<Teacher> getActiveTeachers();

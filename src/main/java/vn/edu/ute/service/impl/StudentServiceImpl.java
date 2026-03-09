@@ -82,6 +82,35 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    public void updateStudent(Student s) throws Exception {
+        if (s.getFullName() == null || s.getFullName().isEmpty()) {
+            throw new Exception("Họ tên học viên không được để trống!");
+        }
+
+        // Kiểm tra trùng email nhưng bỏ qua chính sinh viên đang sửa (so sánh ID)
+        boolean emailDuplicate = repo.findAll().stream()
+                .anyMatch(existing ->
+                        existing.getEmail().equalsIgnoreCase(s.getEmail())
+                        && !existing.getStudentId().equals(s.getStudentId())
+                );
+        if (emailDuplicate) {
+            throw new Exception("Email này đã được đăng ký bởi học viên khác!");
+        }
+
+        // Kiểm tra trùng SĐT nhưng bỏ qua chính sinh viên đang sửa
+        boolean phoneDuplicate = repo.findAll().stream()
+                .anyMatch(existing ->
+                        existing.getPhone().equals(s.getPhone())
+                        && !existing.getStudentId().equals(s.getStudentId())
+                );
+        if (phoneDuplicate) {
+            throw new Exception("Số điện thoại này đã tồn tại!");
+        }
+
+        repo.save(s);
+    }
+
+    @Override
     public void deleteStudent(Long id) throws Exception {
         repo.deleteById(id);
     }

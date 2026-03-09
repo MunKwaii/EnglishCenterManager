@@ -89,6 +89,35 @@ public class TeacherServiceImpl implements TeacherService {
     }
 
     @Override
+    public void updateTeacher(Teacher t) throws Exception {
+        if (t.getFullName() == null || t.getFullName().isEmpty()) {
+            throw new Exception("Họ tên không được để trống!");
+        }
+
+        // Kiểm tra trùng email nhưng bỏ qua chính giáo viên đang sửa
+        boolean emailDuplicate = repo.findAll().stream()
+                .anyMatch(existing ->
+                        existing.getEmail().equalsIgnoreCase(t.getEmail())
+                        && !existing.getTeacherId().equals(t.getTeacherId())
+                );
+        if (emailDuplicate) {
+            throw new Exception("Email này đã được sử dụng bởi giáo viên khác!");
+        }
+
+        // Kiểm tra trùng SĐT nhưng bỏ qua chính giáo viên đang sửa
+        boolean phoneDuplicate = repo.findAll().stream()
+                .anyMatch(existing ->
+                        existing.getPhone().equals(t.getPhone())
+                        && !existing.getTeacherId().equals(t.getTeacherId())
+                );
+        if (phoneDuplicate) {
+            throw new Exception("Số điện thoại này đã tồn tại!");
+        }
+
+        repo.save(t);
+    }
+
+    @Override
     public void deleteTeacher(Long id) throws Exception {
         repo.deleteById(id); //
     }

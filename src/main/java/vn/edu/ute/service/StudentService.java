@@ -14,6 +14,7 @@ public interface StudentService {
 
     // --- Các hàm CRUD ---
     void addStudent(Student s) throws Exception;
+    void updateStudent(Student s) throws Exception;
     void deleteStudent(Long id) throws Exception;
     List<Student> getAllStudents();
 }
