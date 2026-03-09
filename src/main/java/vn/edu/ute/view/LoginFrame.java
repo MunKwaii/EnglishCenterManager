@@ -1,7 +1,11 @@
 package vn.edu.ute.view;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import vn.edu.ute.service.UserAccountService;
 import vn.edu.ute.service.impl.UserAccountServiceImpl;
 import vn.edu.ute.util.UserSession;
@@ -10,136 +14,122 @@ public class LoginFrame extends JFrame {
 
     private final UserAccountService authService = new UserAccountServiceImpl();
 
-    // UI Components
+    private final Color COLOR_PRIMARY = new Color(52, 152, 219);
     private JTextField txtUsername;
     private JPasswordField txtPassword;
     private JCheckBox chkShowPass;
     private JButton btnLogin, btnExit;
 
     public LoginFrame() {
-        setTitle("Hệ thống Quản lý MIS Center - Đăng nhập");
+        setTitle("MIS Center - Đăng nhập");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
+
         initComponents();
         setupEvents();
 
-        setSize(450, 300);
-        setLocationRelativeTo(null); // Hiện ra giữa màn hình
+        pack();
+        setSize(480, 550);
+        setLocationRelativeTo(null);
     }
 
     private void initComponents() {
-        // Dùng BorderLayout làm gốc, chia thành Header và Form
-        setLayout(new BorderLayout(20, 20));
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(Color.WHITE);
+        setContentPane(mainPanel);
 
-        // 1. Header: Tiêu đề lớn
-        JPanel pnlHeader = new JPanel();
-        pnlHeader.setBackground(new Color(41, 128, 185)); // Màu xanh dương chuyên nghiệp
+        // Header
+        JPanel pnlHeader = new JPanel(new GridBagLayout());
+        pnlHeader.setBackground(COLOR_PRIMARY);
+        pnlHeader.setPreferredSize(new Dimension(480, 120));
         JLabel lblTitle = new JLabel("MIS CENTER LOGIN");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 26));
         lblTitle.setForeground(Color.WHITE);
         pnlHeader.add(lblTitle);
-        add(pnlHeader, BorderLayout.NORTH);
+        mainPanel.add(pnlHeader, BorderLayout.NORTH);
 
-        // 2. Center: Form nhập liệu
+        // Form
         JPanel pnlForm = new JPanel(new GridBagLayout());
+        pnlForm.setBackground(Color.WHITE);
+        pnlForm.setBorder(new EmptyBorder(30, 50, 30, 50));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 0, 10, 0);
 
-        gbc.gridx = 0; gbc.gridy = 0;
-        pnlForm.add(new JLabel("Tên đăng nhập:"), gbc);
-        gbc.gridx = 1;
-        txtUsername = new JTextField(15);
-        pnlForm.add(txtUsername, gbc);
+        gbc.gridy = 0; pnlForm.add(new JLabel("Tên đăng nhập"), gbc);
+        gbc.gridy = 1; txtUsername = new JTextField(); customizeField(txtUsername); pnlForm.add(txtUsername, gbc);
+        gbc.gridy = 2; pnlForm.add(new JLabel("Mật khẩu"), gbc);
+        gbc.gridy = 3; txtPassword = new JPasswordField(); customizeField(txtPassword); pnlForm.add(txtPassword, gbc);
+        gbc.gridy = 4; chkShowPass = new JCheckBox("Hiện mật khẩu"); chkShowPass.setBackground(Color.WHITE); pnlForm.add(chkShowPass, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
-        pnlForm.add(new JLabel("Mật khẩu:"), gbc);
-        gbc.gridx = 1;
-        txtPassword = new JPasswordField(15);
-        pnlForm.add(txtPassword, gbc);
+        mainPanel.add(pnlForm, BorderLayout.CENTER);
 
-        gbc.gridx = 1; gbc.gridy = 2;
-        chkShowPass = new JCheckBox("Hiện mật khẩu");
-        pnlForm.add(chkShowPass, gbc);
+        // Footer
+        JPanel pnlFooter = new JPanel(new GridBagLayout());
+        pnlFooter.setBackground(Color.WHITE);
+        pnlFooter.setBorder(new EmptyBorder(0, 50, 40, 50));
+        GridBagConstraints gbcBtn = new GridBagConstraints();
+        gbcBtn.fill = GridBagConstraints.HORIZONTAL; gbcBtn.weightx = 1.0; gbcBtn.insets = new Insets(0, 5, 0, 5);
 
-        add(pnlForm, BorderLayout.CENTER);
+        btnLogin = new JButton("ĐĂNG NHẬP");
+        customizeButton(btnLogin, COLOR_PRIMARY, Color.WHITE);
+        pnlFooter.add(btnLogin, gbcBtn);
 
-        // 3. South: Nút bấm
-        JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-        btnLogin = new JButton("Đăng nhập");
-        btnLogin.setPreferredSize(new Dimension(120, 35));
-        btnLogin.setBackground(new Color(46, 204, 113));
-        btnLogin.setForeground(Color.WHITE);
-        btnLogin.setFocusPainted(false);
+        btnExit = new JButton("THOÁT");
+        customizeButton(btnExit, new Color(231, 76, 60), Color.WHITE);
+        gbcBtn.gridx = 1;
+        pnlFooter.add(btnExit, gbcBtn);
 
-        btnExit = new JButton("Thoát");
-        btnExit.setPreferredSize(new Dimension(100, 35));
+        mainPanel.add(pnlFooter, BorderLayout.SOUTH);
+    }
 
-        pnlButtons.add(btnLogin);
-        pnlButtons.add(btnExit);
-        add(pnlButtons, BorderLayout.SOUTH);
+    private void customizeField(JTextField field) {
+        field.setPreferredSize(new Dimension(300, 40));
+        field.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        field.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(new Color(200, 200, 200), 1),
+                new EmptyBorder(5, 10, 5, 10)
+        ));
+    }
+
+    private void customizeButton(JButton btn, Color bg, Color fg) {
+        btn.setPreferredSize(new Dimension(140, 45));
+        btn.setBackground(bg);
+        btn.setForeground(fg);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { btn.setBackground(bg.darker()); }
+            public void mouseExited(MouseEvent e) { btn.setBackground(bg); }
+        });
     }
 
     private void setupEvents() {
-        // Hiện/Ẩn mật khẩu
-        chkShowPass.addActionListener(e -> {
-            if (chkShowPass.isSelected()) {
-                txtPassword.setEchoChar((char) 0);
-            } else {
-                txtPassword.setEchoChar('•');
-            }
-        });
-
-        // Xử lý đăng nhập
+        chkShowPass.addActionListener(e -> txtPassword.setEchoChar(chkShowPass.isSelected() ? (char) 0 : '•'));
         btnLogin.addActionListener(e -> handleLogin());
-
-        // Nhấn Enter để đăng nhập luôn cho tiện
-        txtPassword.addActionListener(e -> handleLogin());
-
         btnExit.addActionListener(e -> System.exit(0));
     }
 
+    // --- HÀM XỬ LÝ ĐĂNG NHẬP ---
     private void handleLogin() {
         String user = txtUsername.getText().trim();
         String pass = new String(txtPassword.getPassword());
 
-        if (user.isEmpty() || pass.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin!");
-            return;
-        }
-
-        // Gọi Service check SHA-256 trong DB
         if (authService.login(user, pass)) {
-            JOptionPane.showMessageDialog(this, "Chào mừng " + UserSession.getCurrentUser().getUsername() + " trở lại!");
-
-            // Đóng cửa sổ Login và mở Dashboard chính
-            this.dispose();
-            openMainDashboard();
+            JOptionPane.showMessageDialog(this, "Thành công! Chào mừng " + UserSession.getCurrentUser().getUsername());
+            openMainDashboard(); // Gọi hàm mở Dashboard ở đây
         } else {
             JOptionPane.showMessageDialog(this, "Sai tài khoản hoặc mật khẩu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 
+    // --- HÀM MỞ DASHBOARD (TÁCH RIÊNG RA NGOÀI) ---
     private void openMainDashboard() {
-        // Chỗ này sau này ông sẽ gọi cái Frame chính của nhóm ông (Ví dụ MainFrame)
-        JFrame main = new JFrame("Hệ thống Quản lý MIS - Dashboard");
-        main.setSize(1200, 800);
-        main.setLocationRelativeTo(null);
-        main.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        // Demo hiển thị Role hiện tại
-        JLabel lblWelcome = new JLabel("Quyền hạn hiện tại: " + UserSession.getCurrentUser().getRole(), SwingConstants.CENTER);
-        main.add(lblWelcome);
-
-        main.setVisible(true);
-    }
-
-    public static void main(String[] args) {
-        // Set giao diện hệ thống cho đẹp
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {}
-
-        SwingUtilities.invokeLater(() -> new LoginFrame().setVisible(true));
+        this.dispose(); // Đóng cửa sổ Login
+        SwingUtilities.invokeLater(() -> {
+            new MainFrame().setVisible(true); // Mở MainFrame
+        });
     }
 }

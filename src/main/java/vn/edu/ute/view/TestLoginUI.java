@@ -4,20 +4,17 @@ import javax.swing.*;
 
 public class TestLoginUI {
     public static void main(String[] args) {
-        // 1. Thiết lập giao diện theo hệ điều hành (Windows/macOS/Linux)
+        // dòng này để tự động scale giao diện trên màn hình độ phân giải cao
+        System.setProperty("sun.java2d.uiScale", "2.0"); 
+
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // 2. Chạy ứng dụng trong luồng xử lý giao diện
         SwingUtilities.invokeLater(() -> {
-            // Khởi tạo Frame Đăng nhập
-            LoginFrame login = new LoginFrame();
-
-            // Hiển thị
-            login.setVisible(true);
+            new LoginFrame().setVisible(true);
         });
     }
 }
