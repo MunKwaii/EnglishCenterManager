@@ -1,11 +1,12 @@
-package vn.edu.ute.ui;
-
-import vn.edu.ute.ui.panel.EnrollmentPanel;
-import vn.edu.ute.ui.panel.FinancePanel;
-import vn.edu.ute.ui.panel.StaffPanel;
-import vn.edu.ute.ui.panel.AcademicOperationPanel;
+package vn.edu.ute.view;
 
 import javax.swing.*;
+
+import vn.edu.ute.view.panel.AcademicOperationPanel;
+import vn.edu.ute.view.panel.EnrollmentPanel;
+import vn.edu.ute.view.panel.FinancePanel;
+import vn.edu.ute.view.panel.StaffPanel;
+
 import java.awt.*;
 
 public class MainDashboard extends JFrame {

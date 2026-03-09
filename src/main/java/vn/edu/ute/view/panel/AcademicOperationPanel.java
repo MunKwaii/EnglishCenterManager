@@ -1,4 +1,4 @@
-package vn.edu.ute.ui.panel;
+package vn.edu.ute.view.panel;
 
 import vn.edu.ute.model.Attendance;
 import vn.edu.ute.model.Result;
