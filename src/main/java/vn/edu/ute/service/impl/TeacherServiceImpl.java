@@ -69,11 +69,22 @@ public class TeacherServiceImpl implements TeacherService {
     // --- CÁC HÀM CRUD  ---
     @Override
     public void addTeacher(Teacher t) throws Exception {
-        // logic kiểm tra ở đây trước khi gọi repo
+        // 1. Kiểm tra trống
         if (t.getFullName() == null || t.getFullName().isEmpty()) {
             throw new Exception("Họ tên không được để trống!");
         }
-        repo.save(t); // Repo này đã xử lý cả Thêm mới và Cập nhật
+
+        // 2. Tận dụng Lambda để check trùng Email
+        if (isEmailExists(t.getEmail())) {
+            throw new Exception("Email này đã được sử dụng bởi giáo viên khác!");
+        }
+
+        // 3. Tận dụng Lambda để check trùng SĐT
+        if (findByPhone(t.getPhone()) != null) {
+            throw new Exception("Số điện thoại này đã tồn tại!");
+        }
+
+        repo.save(t);
     }
 
     @Override
