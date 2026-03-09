@@ -99,7 +99,7 @@ public class TeacherServiceImpl implements TeacherService {
     }
     @Override
     public List<Teacher> getActiveTeachers() {
-        List<Teacher> allTeachers = teacherRepo.findAll();
+        List<Teacher> allTeachers = repo.findAll();
         if (allTeachers == null)
             return List.of();
 
