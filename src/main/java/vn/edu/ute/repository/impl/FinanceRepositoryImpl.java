@@ -39,4 +39,13 @@ public class FinanceRepositoryImpl implements FinanceRepository {
               .getResultList()
         );
     }
+
+    // --- PHƯƠNG THỨC MỚI ĐƯỢC BỔ SUNG ---
+    @Override
+    public List<Payment> getAllPayments() throws Exception {
+        return tx.runInTransaction(em -> 
+            em.createQuery("SELECT p FROM Payment p JOIN FETCH p.invoice JOIN FETCH p.student", Payment.class)
+              .getResultList()
+        );
+    }
 }

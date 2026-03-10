@@ -1,4 +1,4 @@
-package vn.edu.ute.view.panel;
+package vn.edu.ute.view;
 
 import vn.edu.ute.model.Staff;
 import vn.edu.ute.model.enums.StaffRole;

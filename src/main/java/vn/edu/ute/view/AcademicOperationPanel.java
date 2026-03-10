@@ -1,19 +1,13 @@
-package vn.edu.ute.view.panel;
+package vn.edu.ute.view;
 
-import vn.edu.ute.model.Attendance;
-import vn.edu.ute.model.Result;
 import vn.edu.ute.model.enums.AttendanceStatus;
-import vn.edu.ute.service.AcademicOperationService;
-import vn.edu.ute.service.impl.AcademicOperationServiceImpl;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
 
 public class AcademicOperationPanel extends JPanel {
-    private final AcademicOperationService operationService = new AcademicOperationServiceImpl();
+    // private final AcademicOperationService operationService = new AcademicOperationServiceImpl();
     private JTabbedPane tabbedPane;
 
     public AcademicOperationPanel() {
@@ -68,7 +62,7 @@ public class AcademicOperationPanel extends JPanel {
 
         btnSave.addActionListener(e -> {
             try {
-                List<Attendance> attendances = new ArrayList<>();
+                // List<Attendance> attendances = new ArrayList<>();
                 // Duyệt table thu thập dữ liệu (Thực tế cần gắn ID thật)
                 for (int i = 0; i < model.getRowCount(); i++) {
                     // Logic tạo đối tượng Attendance (Được rút gọn để focus vào UI)
