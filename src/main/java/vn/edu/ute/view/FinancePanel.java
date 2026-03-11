@@ -44,8 +44,25 @@ public class FinancePanel extends JPanel {
         add(initTablePanel(), BorderLayout.CENTER); 
         add(initFormPanel(), BorderLayout.SOUTH);   
         
-        // Tải dữ liệu thật từ DB
+        // Tải dữ liệu thật từ DB lần đầu tiên
         loadDataToTable(); 
+
+        // Tự động Refresh dữ liệu mỗi khi người dùng click mở Tab này
+        this.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                // Làm sạch form khi quay lại tab này
+                txtInvoiceId.setText("");
+                txtAmount.setText("");
+                txtRefCode.setText("");
+                cbMethod.setSelectedIndex(0);
+                invoiceTable.clearSelection();
+                lblStatus.setText(" ");
+                
+                // Tải lại bảng Hóa đơn (để lấy các hóa đơn mới vừa được ghi danh)
+                loadDataToTable();
+            }
+        });
     }
 
     private JPanel initTopPanel() {
@@ -101,7 +118,6 @@ public class FinancePanel extends JPanel {
         JPanel formContainer = new JPanel(new BorderLayout());
         formContainer.setBorder(BorderFactory.createTitledBorder("Thanh toán Hóa đơn"));
 
-        // SỬA LẠI LAYOUT: Dùng GridLayout 2 dòng, 4 cột để hiển thị 4 cặp Label - Field ngay ngắn
         JPanel paymentForm = new JPanel(new GridLayout(2, 4, 15, 10));
         paymentForm.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -114,9 +130,9 @@ public class FinancePanel extends JPanel {
         lblStatus = new JLabel(" ");
         lblStatus.setForeground(Color.RED);
 
-        // --- UX TỐI ƯU 1: Xử lý bật/tắt ô Mã giao dịch ---
+        // Xử lý bật/tắt ô Mã giao dịch
         txtRefCode.setEnabled(false);
-        txtRefCode.setBackground(new Color(240, 240, 240)); // Màu xám khi khóa
+        txtRefCode.setBackground(new Color(240, 240, 240));
 
         cbMethod.addActionListener(e -> {
             PaymentMethod method = (PaymentMethod) cbMethod.getSelectedItem();
@@ -130,17 +146,15 @@ public class FinancePanel extends JPanel {
             }
         });
 
-        // --- UX TỐI ƯU 2: Định dạng ô Số tiền (Auto-format) ---
+        // Định dạng ô Số tiền (Auto-format)
         txtAmount.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                // Xóa dấu phẩy đi để user dễ gõ số
                 txtAmount.setText(txtAmount.getText().replace(",", ""));
             }
 
             @Override
             public void focusLost(FocusEvent e) {
-                // Định dạng lại có dấu phẩy khi user click ra ngoài
                 String text = txtAmount.getText().replace(",", "").trim();
                 if (!text.isEmpty()) {
                     try {
@@ -151,7 +165,6 @@ public class FinancePanel extends JPanel {
             }
         });
 
-        // Add tuần tự để xếp thành 2 hàng chuẩn xác:
         paymentForm.add(new JLabel("ID Hóa đơn:")); paymentForm.add(txtInvoiceId);
         paymentForm.add(new JLabel("Số tiền (VNĐ):")); paymentForm.add(txtAmount);
         
@@ -180,7 +193,7 @@ public class FinancePanel extends JPanel {
                     tableModel.addRow(new Object[]{
                         inv.getInvoiceId(),
                         inv.getStudent() != null ? inv.getStudent().getFullName() : "N/A",
-                        currencyFormat.format(inv.getTotalAmount()), // Định dạng tiền tệ trên bảng
+                        currencyFormat.format(inv.getTotalAmount()), 
                         inv.getIssueDate(),
                         inv.getStatus()
                     });
@@ -201,7 +214,7 @@ public class FinancePanel extends JPanel {
                     .forEach(inv -> tableModel.addRow(new Object[]{
                             inv.getInvoiceId(), 
                             inv.getStudent().getFullName(), 
-                            currencyFormat.format(inv.getTotalAmount()), // Định dạng khi filter
+                            currencyFormat.format(inv.getTotalAmount()), 
                             inv.getIssueDate(), 
                             inv.getStatus()
                     }));
@@ -227,7 +240,6 @@ public class FinancePanel extends JPanel {
     }
 
     private void processPaymentAsync() {
-        // Cần loại bỏ dấu phẩy trước khi check valid và parse dữ liệu
         String rawAmount = txtAmount.getText().replace(",", "").trim();
 
         if (!ValidatorUtil.isNotEmpty.test(txtInvoiceId.getText())) {
@@ -242,7 +254,6 @@ public class FinancePanel extends JPanel {
         PaymentMethod method = (PaymentMethod) cbMethod.getSelectedItem();
         String refCode = txtRefCode.getText().trim();
 
-        // Bắt buộc nhập mã giao dịch nếu chuyển khoản/quẹt thẻ
         if (method != PaymentMethod.Cash && refCode.isEmpty()) {
             lblStatus.setText("Vui lòng nhập Mã giao dịch cho hình thức chuyển khoản/thẻ!");
             return;
@@ -277,7 +288,7 @@ public class FinancePanel extends JPanel {
                     txtInvoiceId.setText("");
                     txtAmount.setText("");
                     txtRefCode.setText("");
-                    cbMethod.setSelectedIndex(0); // Trả về mặc định
+                    cbMethod.setSelectedIndex(0); 
                     invoiceTable.clearSelection();
                     
                     loadDataToTable();

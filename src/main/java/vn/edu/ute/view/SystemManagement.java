@@ -1,7 +1,6 @@
 package vn.edu.ute.view;
 
 import javax.swing.*;
-
 import java.awt.*;
 
 public class SystemManagement extends JFrame {
@@ -34,6 +33,10 @@ public class SystemManagement extends JFrame {
         JButton btnEnrollment = createMenuButton("Ghi danh");
         JButton btnFinance = createMenuButton("Tài chính & Hóa đơn");
         JButton btnAcademic = createMenuButton("Vận hành Lớp học");
+        
+        // MỚI THÊM: Nút cho 2 Module mở rộng
+        JButton btnPromotion = createMenuButton("Quản lý Khuyến mãi");
+        JButton btnCertificate = createMenuButton("Cấp phát Chứng chỉ");
 
         sidebar.add(btnStaff);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
@@ -42,6 +45,12 @@ public class SystemManagement extends JFrame {
         sidebar.add(btnFinance);
         sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
         sidebar.add(btnAcademic);
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+        
+        // MỚI THÊM: Add 2 nút vào sidebar
+        sidebar.add(btnPromotion);
+        sidebar.add(Box.createRigidArea(new Dimension(0, 10)));
+        sidebar.add(btnCertificate);
 
         // --- 2. Tạo Main Content với CardLayout ---
         cardLayout = new CardLayout();
@@ -52,12 +61,20 @@ public class SystemManagement extends JFrame {
         cardPanel.add(new EnrollmentPanel(), "Enrollment");
         cardPanel.add(new FinancePanel(), "Finance");
         cardPanel.add(new AcademicOperationPanel(), "Academic");
+        
+        // MỚI THÊM: Khởi tạo và đưa Panel Khuyến mãi, Chứng chỉ vào CardLayout
+        cardPanel.add(new PromotionPanel(), "Promotion");
+        cardPanel.add(new CertificatePanel(), "Certificate");
 
         // --- 3. SỬ DỤNG LAMBDA CHO SỰ KIỆN CLICK ---
         btnStaff.addActionListener(e -> cardLayout.show(cardPanel, "Staff"));
         btnEnrollment.addActionListener(e -> cardLayout.show(cardPanel, "Enrollment"));
         btnFinance.addActionListener(e -> cardLayout.show(cardPanel, "Finance"));
         btnAcademic.addActionListener(e -> cardLayout.show(cardPanel, "Academic"));
+        
+        // MỚI THÊM: Sự kiện chuyển tab
+        btnPromotion.addActionListener(e -> cardLayout.show(cardPanel, "Promotion"));
+        btnCertificate.addActionListener(e -> cardLayout.show(cardPanel, "Certificate"));
 
         // Gắn vào JFrame
         add(sidebar, BorderLayout.WEST);
@@ -77,7 +94,6 @@ public class SystemManagement extends JFrame {
     // Hàm Main để chạy độc lập và test giao diện
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // Có thể thêm Look & Feel ở đây để UI đẹp hơn
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception ignored) {}

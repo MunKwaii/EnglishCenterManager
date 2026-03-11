@@ -43,6 +43,7 @@ public class Promotion {
     private Status status = Status.Active;
 
     // Quan hệ một khuyến mãi có thể áp dụng cho nhiều hóa đơn
+    @ToString.Exclude
     @OneToMany(mappedBy = "promotion", fetch = FetchType.LAZY)
     private List<Invoice> invoices;
 }
