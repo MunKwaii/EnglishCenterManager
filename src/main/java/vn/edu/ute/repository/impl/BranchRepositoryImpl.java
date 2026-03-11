@@ -1,18 +1,18 @@
 package vn.edu.ute.repository.impl;
 
-import vn.edu.ute.model.Room;
-import vn.edu.ute.repository.RoomRepository;
+import vn.edu.ute.model.Branch;
+import vn.edu.ute.repository.BranchRepository;
 import vn.edu.ute.util.TransactionManager;
 import java.util.List;
 
-public class RoomRepositoryImpl implements RoomRepository {
+public class BranchRepositoryImpl implements BranchRepository {
     private final TransactionManager txManager = new TransactionManager();
 
     @Override
-    public List<Room> findAll() {
+    public List<Branch> findAll() {
         try {
             return txManager.runInTransaction(em ->
-                    em.createQuery("SELECT r FROM Room r LEFT JOIN FETCH r.branch", Room.class).getResultList()
+                    em.createQuery("SELECT b FROM Branch b", Branch.class).getResultList()
             );
         } catch (Exception e) {
             e.printStackTrace();
@@ -21,14 +21,9 @@ public class RoomRepositoryImpl implements RoomRepository {
     }
 
     @Override
-    public Room findById(Long id) {
+    public Branch findById(Long id) {
         try {
-            return txManager.runInTransaction(em -> {
-                List<Room> rooms = em.createQuery("SELECT r FROM Room r LEFT JOIN FETCH r.branch WHERE r.roomId = :id", Room.class)
-                        .setParameter("id", id)
-                        .getResultList();
-                return rooms.isEmpty() ? null : rooms.get(0);
-            });
+            return txManager.runInTransaction(em -> em.find(Branch.class, id));
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -36,14 +31,14 @@ public class RoomRepositoryImpl implements RoomRepository {
     }
 
     @Override
-    public Room save(Room room) {
+    public Branch save(Branch branch) {
         try {
             return txManager.runInTransaction(em -> {
-                if (room.getRoomId() == null) {
-                    em.persist(room); // Thêm phòng mới
-                    return room;
+                if (branch.getBranchId() == null) {
+                    em.persist(branch); // Thêm mới
+                    return branch;
                 } else {
-                    return em.merge(room); // Cập nhật phòng đã có
+                    return em.merge(branch); // Cập nhật
                 }
             });
         } catch (Exception e) {
@@ -56,9 +51,9 @@ public class RoomRepositoryImpl implements RoomRepository {
     public boolean delete(Long id) {
         try {
             return txManager.runInTransaction(em -> {
-                Room room = em.find(Room.class, id);
-                if (room != null) {
-                    em.remove(room);
+                Branch branch = em.find(Branch.class, id);
+                if (branch != null) {
+                    em.remove(branch);
                     return true;
                 }
                 return false;

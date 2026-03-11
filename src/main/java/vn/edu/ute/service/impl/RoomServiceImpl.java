@@ -23,6 +23,11 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Override
+    public Room updateRoom(Room room) {
+        return roomRepo.save(room);
+    }
+
+    @Override
     public boolean removeRoom(Long id) {
         return roomRepo.delete(id);
     }
@@ -30,7 +35,8 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public List<Room> getActiveRooms() {
         List<Room> allRooms = roomRepo.findAll();
-        if (allRooms == null) return List.of();
+        if (allRooms == null)
+            return List.of();
 
         // Lọc danh sách các phòng có trạng thái là Active
         return allRooms.stream()
@@ -41,7 +47,8 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public List<Room> getRoomsByMinCapacity(int requiredCapacity) {
         List<Room> allRooms = roomRepo.findAll();
-        if (allRooms == null) return List.of();
+        if (allRooms == null)
+            return List.of();
 
         // Tìm các phòng học có sức chứa lớn hơn hoặc bằng sức chứa yêu cầu
         return allRooms.stream()
@@ -52,9 +59,10 @@ public class RoomServiceImpl implements RoomService {
     @Override
     public List<Room> searchRoomByName(String keyword) {
         List<Room> allRooms = roomRepo.findAll();
-        if (allRooms == null) return List.of();
+        if (allRooms == null)
+            return List.of();
 
-        //  kiếm phòng học theo tên, không phân biệt hoa/thường
+        // kiếm phòng học theo tên, không phân biệt hoa/thường
         return allRooms.stream()
                 .filter(r -> r.getRoomName().toLowerCase().contains(keyword.toLowerCase()))
                 .collect(Collectors.toList());

@@ -6,6 +6,7 @@ import java.util.List;
 public interface RoomService {
     List<Room> getAllRooms();
     Room addRoom(Room room);
+    Room updateRoom(Room room);
     boolean removeRoom(Long id);
 
     // Sẽ dùng Lambda cho các hàm dưới 
