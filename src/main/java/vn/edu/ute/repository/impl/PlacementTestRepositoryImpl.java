@@ -1,18 +1,19 @@
 package vn.edu.ute.repository.impl;
 
-import vn.edu.ute.model.Room;
-import vn.edu.ute.repository.RoomRepository;
+import vn.edu.ute.model.PlacementTest;
+import vn.edu.ute.repository.PlacementTestRepository;
 import vn.edu.ute.util.TransactionManager;
 import java.util.List;
 
-public class RoomRepositoryImpl implements RoomRepository {
+public class PlacementTestRepositoryImpl implements PlacementTestRepository {
     private final TransactionManager txManager = new TransactionManager();
 
     @Override
-    public List<Room> findAll() {
+    public List<PlacementTest> findAll() {
         try {
             return txManager.runInTransaction(em ->
-                    em.createQuery("SELECT r FROM Room r LEFT JOIN FETCH r.branch", Room.class).getResultList()
+                    // Sử dụng JOIN FETCH để lấy luôn thông tin Student tránh LazyInitializationException
+                    em.createQuery("SELECT p FROM PlacementTest p LEFT JOIN FETCH p.student", PlacementTest.class).getResultList()
             );
         } catch (Exception e) {
             e.printStackTrace();
@@ -21,13 +22,13 @@ public class RoomRepositoryImpl implements RoomRepository {
     }
 
     @Override
-    public Room findById(Long id) {
+    public PlacementTest findById(Long id) {
         try {
             return txManager.runInTransaction(em -> {
-                List<Room> rooms = em.createQuery("SELECT r FROM Room r LEFT JOIN FETCH r.branch WHERE r.roomId = :id", Room.class)
+                List<PlacementTest> tests = em.createQuery("SELECT p FROM PlacementTest p LEFT JOIN FETCH p.student WHERE p.testId = :id", PlacementTest.class)
                         .setParameter("id", id)
                         .getResultList();
-                return rooms.isEmpty() ? null : rooms.get(0);
+                return tests.isEmpty() ? null : tests.get(0);
             });
         } catch (Exception e) {
             e.printStackTrace();
@@ -36,14 +37,14 @@ public class RoomRepositoryImpl implements RoomRepository {
     }
 
     @Override
-    public Room save(Room room) {
+    public PlacementTest save(PlacementTest test) {
         try {
             return txManager.runInTransaction(em -> {
-                if (room.getRoomId() == null) {
-                    em.persist(room); // Thêm phòng mới
-                    return room;
+                if (test.getTestId() == null) {
+                    em.persist(test);
+                    return test;
                 } else {
-                    return em.merge(room); // Cập nhật phòng đã có
+                    return em.merge(test);
                 }
             });
         } catch (Exception e) {
@@ -56,9 +57,9 @@ public class RoomRepositoryImpl implements RoomRepository {
     public boolean delete(Long id) {
         try {
             return txManager.runInTransaction(em -> {
-                Room room = em.find(Room.class, id);
-                if (room != null) {
-                    em.remove(room);
+                PlacementTest test = em.find(PlacementTest.class, id);
+                if (test != null) {
+                    em.remove(test);
                     return true;
                 }
                 return false;

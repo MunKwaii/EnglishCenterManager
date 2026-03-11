@@ -37,9 +37,11 @@ public class Branch {
 
     // Quan hệ một chi nhánh có nhiều phòng
     @OneToMany(mappedBy = "branch", fetch = FetchType.LAZY)
+    @ToString.Exclude
     private List<Room> rooms;
 
     // Quan hệ một chi nhánh có nhiều lớp học
     @OneToMany(mappedBy = "branch", fetch = FetchType.LAZY)
+    @ToString.Exclude
     private List<AcademicClass> classes;
 }

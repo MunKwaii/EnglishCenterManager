@@ -4,15 +4,18 @@ import vn.edu.ute.model.AcademicClass;
 import vn.edu.ute.model.Course;
 import vn.edu.ute.model.Room;
 import vn.edu.ute.model.Teacher;
+import vn.edu.ute.model.Branch;
 import vn.edu.ute.model.enums.ClassStatus;
 import vn.edu.ute.service.AcademicClassService;
 import vn.edu.ute.service.CourseService;
 import vn.edu.ute.service.RoomService;
 import vn.edu.ute.service.TeacherService;
+import vn.edu.ute.service.BranchService;
 import vn.edu.ute.service.impl.AcademicClassServiceImpl;
 import vn.edu.ute.service.impl.CourseServiceImpl;
 import vn.edu.ute.service.impl.RoomServiceImpl;
 import vn.edu.ute.service.impl.TeacherServiceImpl;
+import vn.edu.ute.service.impl.BranchServiceImpl;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -29,6 +32,7 @@ public class ClassPanel extends JPanel {
     private final CourseService courseService = new CourseServiceImpl();
     private final RoomService roomService = new RoomServiceImpl();
     private final TeacherService teacherService = new TeacherServiceImpl();
+    private final BranchService branchService = new BranchServiceImpl();
 
     // UI Components
     private JTable table;
@@ -39,6 +43,7 @@ public class ClassPanel extends JPanel {
     private JComboBox<Course> cbCourse;
     private JComboBox<Room> cbRoom;
     private JComboBox<Teacher> cbTeacher;
+    private JComboBox<Branch> cbBranch;
     private JComboBox<ClassStatus> cbStatus;
 
     private JButton btnAdd, btnUpdate, btnDelete, btnSearch, btnRefresh;
@@ -55,7 +60,7 @@ public class ClassPanel extends JPanel {
     }
 
     private JPanel createFormPanel() {
-        JPanel formPanel = new JPanel(new GridLayout(4, 4, 10, 10));
+        JPanel formPanel = new JPanel(new GridLayout(5, 4, 10, 10));
         formPanel.setBorder(BorderFactory.createTitledBorder("Thông tin Lớp Học"));
 
         txtClassName = new JTextField();
@@ -110,6 +115,20 @@ public class ClassPanel extends JPanel {
             }
         });
 
+        cbBranch = new JComboBox<>();
+        loadActiveBranches();
+        cbBranch.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected,
+                    boolean cellHasFocus) {
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                if (value instanceof Branch) {
+                    setText(((Branch) value).getBranchName());
+                }
+                return this;
+            }
+        });
+
         cbStatus = new JComboBox<>(ClassStatus.values());
 
         formPanel.add(new JLabel("Tên lớp:"));
@@ -129,8 +148,15 @@ public class ClassPanel extends JPanel {
 
         formPanel.add(new JLabel("Giáo viên:"));
         formPanel.add(cbTeacher);
+        formPanel.add(new JLabel("Chi nhánh:"));
+        formPanel.add(cbBranch);
+
         formPanel.add(new JLabel("Trạng thái:"));
         formPanel.add(cbStatus);
+        
+        // Trống 2 ô cuối để căn chỉnh đẹp hơn
+        formPanel.add(new JLabel());
+        formPanel.add(new JLabel());
 
         return formPanel;
     }
@@ -138,7 +164,7 @@ public class ClassPanel extends JPanel {
     private JPanel createTablePanel() {
         JPanel tablePanel = new JPanel(new BorderLayout());
 
-        String[] columns = { "ID", "Tên Lớp", "Khóa Học", "Phòng", "Giáo Viên", "Bắt Đầu", "Kết Thúc", "Sĩ Số",
+        String[] columns = { "ID", "Tên Lớp", "Khóa Học", "Chi Nhánh", "Phòng", "Giáo Viên", "Bắt Đầu", "Kết Thúc", "Sĩ Số",
                 "Trạng Thái" };
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -182,6 +208,8 @@ public class ClassPanel extends JPanel {
                         setSelectedItemById(cbRoom, aClass.getRoom().getRoomId());
                     if (aClass.getTeacher() != null)
                         setSelectedItemById(cbTeacher, aClass.getTeacher().getTeacherId());
+                    if (aClass.getBranch() != null)
+                        setSelectedItemById(cbBranch, aClass.getBranch().getBranchId());
 
                     cbStatus.setSelectedItem(aClass.getStatus());
                 }
@@ -228,6 +256,7 @@ public class ClassPanel extends JPanel {
                         c.getClassId(),
                         c.getClassName(),
                         c.getCourse() != null ? c.getCourse().getCourseName() : "",
+                        c.getBranch() != null ? c.getBranch().getBranchName() : "",
                         c.getRoom() != null ? c.getRoom().getRoomName() : "",
                         c.getTeacher() != null ? (c.getTeacher().getFullName() != null ? c.getTeacher().getFullName()
                                 : "ID: " + c.getTeacher().getTeacherId()) : "",
@@ -267,6 +296,15 @@ public class ClassPanel extends JPanel {
         }
     }
 
+    private void loadActiveBranches() {
+        cbBranch.removeAllItems();
+        List<Branch> activeBranches = branchService.getActiveBranches();
+        if (activeBranches != null) {
+            for (Branch b : activeBranches)
+                cbBranch.addItem(b);
+        }
+    }
+
     private void setSelectedItemById(JComboBox<?> comboBox, Long id) {
         for (int i = 0; i < comboBox.getItemCount(); i++) {
             Object item = comboBox.getItemAt(i);
@@ -277,6 +315,9 @@ public class ClassPanel extends JPanel {
                 comboBox.setSelectedIndex(i);
                 return;
             } else if (item instanceof Teacher && ((Teacher) item).getTeacherId().equals(id)) {
+                comboBox.setSelectedIndex(i);
+                return;
+            } else if (item instanceof Branch && ((Branch) item).getBranchId().equals(id)) {
                 comboBox.setSelectedIndex(i);
                 return;
             }
@@ -292,6 +333,7 @@ public class ClassPanel extends JPanel {
                 AcademicClass aClass = AcademicClass.builder()
                         .className(txtClassName.getText())
                         .course((Course) cbCourse.getSelectedItem())
+                        .branch((Branch) cbBranch.getSelectedItem())
                         .room((Room) cbRoom.getSelectedItem())
                         .teacher((Teacher) cbTeacher.getSelectedItem())
                         .startDate(sDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
@@ -322,6 +364,7 @@ public class ClassPanel extends JPanel {
             spStartDate.setValue(new Date());
             spEndDate.setValue(new Date());
             loadActiveCourses();
+            loadActiveBranches();
             loadActiveRooms();
             loadActiveTeachers();
             loadDataToTable(classService.getAllClasses());
@@ -342,6 +385,7 @@ public class ClassPanel extends JPanel {
                         .classId(classId)
                         .className(txtClassName.getText())
                         .course((Course) cbCourse.getSelectedItem())
+                        .branch((Branch) cbBranch.getSelectedItem())
                         .room((Room) cbRoom.getSelectedItem())
                         .teacher((Teacher) cbTeacher.getSelectedItem())
                         .startDate(sDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate())
