@@ -7,4 +7,6 @@ import java.util.List;
 public interface AcademicOperationService {
     void processClassAttendance(List<Attendance> attendances) throws Exception;
     void processClassResults(List<Result> results) throws Exception;
+    List<Attendance> getAttendancesByClassId(Long classId) throws Exception;
+    List<Result> getResultsByClassId(Long classId) throws Exception;
 }

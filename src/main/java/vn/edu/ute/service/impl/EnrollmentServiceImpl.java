@@ -3,15 +3,16 @@ package vn.edu.ute.service.impl;
 import vn.edu.ute.model.*;
 import vn.edu.ute.model.enums.EnrollmentStatus;
 import vn.edu.ute.model.enums.InvoiceStatus;
+import vn.edu.ute.model.enums.EnrollmentResult;
 import vn.edu.ute.repository.EnrollmentRepository;
 import vn.edu.ute.repository.FinanceRepository;
 import vn.edu.ute.repository.impl.EnrollmentRepositoryImpl;
 import vn.edu.ute.repository.impl.FinanceRepositoryImpl;
 import vn.edu.ute.service.EnrollmentService;
 import java.time.LocalDate;
+import java.util.List; // MỚI THÊM
 
 public class EnrollmentServiceImpl implements EnrollmentService {
-    // Sửa lỗi khởi tạo bằng cách gọi class Impl
     private final EnrollmentRepository enrollmentRepo = new EnrollmentRepositoryImpl();
     private final FinanceRepository financeRepo = new FinanceRepositoryImpl();
 
@@ -27,6 +28,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .academicClass(academicClass)
                 .enrollmentDate(LocalDate.now())
                 .status(EnrollmentStatus.Enrolled)
+                .result(EnrollmentResult.NA)
                 .build();
         enrollmentRepo.save(enrollment);
 
@@ -38,5 +40,11 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                 .note("Học phí lớp: " + academicClass.getClassName())
                 .build();
         financeRepo.saveInvoice(invoice);
+    }
+
+    // MỚI THÊM: Triển khai hàm gọi xuống Repository để lấy dữ liệu
+    @Override
+    public List<Enrollment> getEnrollmentsByClassId(Long classId) throws Exception {
+        return enrollmentRepo.getEnrollmentsByClassId(classId);
     }
 }

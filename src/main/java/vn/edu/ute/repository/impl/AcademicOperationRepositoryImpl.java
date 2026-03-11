@@ -38,4 +38,29 @@ public class AcademicOperationRepositoryImpl implements AcademicOperationReposit
             return null;
         });
     }
+    @Override
+    public List<Attendance> getAttendancesByClassId(Long classId) throws Exception {
+        return tx.runInTransaction(em -> 
+            em.createQuery(
+                "SELECT a FROM Attendance a " +
+                "JOIN FETCH a.student " +
+                "JOIN FETCH a.academicClass " +
+                "WHERE a.academicClass.classId = :classId", Attendance.class)
+              .setParameter("classId", classId)
+              .getResultList()
+        );
+    }
+
+    @Override
+    public List<Result> getResultsByClassId(Long classId) throws Exception {
+        return tx.runInTransaction(em -> 
+            em.createQuery(
+                "SELECT r FROM Result r " +
+                "JOIN FETCH r.student " +
+                "JOIN FETCH r.academicClass " +
+                "WHERE r.academicClass.classId = :classId", Result.class)
+              .setParameter("classId", classId)
+              .getResultList()
+        );
+    }
 }

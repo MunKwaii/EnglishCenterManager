@@ -7,6 +7,7 @@ import vn.edu.ute.repository.impl.FinanceRepositoryImpl;
 import vn.edu.ute.service.FinanceService;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime; // Đảm bảo đã import thư viện này
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,11 +16,28 @@ public class FinanceServiceImpl implements FinanceService {
     private final FinanceRepository financeRepo = new FinanceRepositoryImpl();
 
     @Override
+    public Invoice getInvoiceById(Long invoiceId) throws Exception {
+        return financeRepo.getInvoiceById(invoiceId);
+    }
+
+    @Override
+    public List<Invoice> getUnpaidInvoices() throws Exception {
+        return financeRepo.getUnpaidInvoices();
+    }
+
+    @Override
+    public List<Payment> getAllPayments() throws Exception {
+        return financeRepo.getAllPayments();
+    }
+
+    @Override
     public Payment processPayment(Invoice invoice, BigDecimal amount, PaymentMethod method, String refCode) throws Exception {
+        // ĐÃ SỬA LỖI: Bổ sung thêm dòng .paymentDate(LocalDateTime.now())
         Payment payment = Payment.builder()
                 .student(invoice.getStudent())
                 .invoice(invoice)
                 .amount(amount)
+                .paymentDate(LocalDateTime.now()) // <--- CHÍNH LÀ DÒNG NÀY
                 .paymentMethod(method)
                 .status(PaymentStatus.Completed)
                 .referenceCode(refCode)
@@ -29,13 +47,12 @@ public class FinanceServiceImpl implements FinanceService {
 
         List<Payment> payments = financeRepo.getPaymentsByInvoiceId(invoice.getInvoiceId());
         
-        // Sử dụng Stream và Lambda để tính tổng tiền đã trả
         BigDecimal totalPaid = payments.stream()
                 .filter(p -> p.getStatus() == PaymentStatus.Completed)
                 .map(Payment::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // So sánh chính xác BigDecimal
+        // Nếu tổng tiền khách trả đã bằng hoặc lớn hơn tổng hóa đơn -> Cập nhật hóa đơn thành Đã thanh toán
         if (totalPaid.compareTo(invoice.getTotalAmount()) >= 0) {
             invoice.setStatus(InvoiceStatus.Paid);
             financeRepo.saveInvoice(invoice);
@@ -44,11 +61,9 @@ public class FinanceServiceImpl implements FinanceService {
         return payment;
     }
 
-    // --- TÍNH NĂNG MỚI: Thống kê doanh thu ---
-    
-    // Thống kê tổng doanh thu theo từng phương thức thanh toán
+    @Override
     public Map<PaymentMethod, BigDecimal> getRevenueByPaymentMethod() throws Exception {
-        List<Payment> allPayments = financeRepo.getAllPayments(); // Cần đảm bảo Repo có hàm này
+        List<Payment> allPayments = financeRepo.getAllPayments(); 
         
         return allPayments.stream()
                 .filter(p -> p.getStatus() == PaymentStatus.Completed)

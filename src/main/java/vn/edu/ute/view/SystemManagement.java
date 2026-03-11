@@ -4,11 +4,11 @@ import javax.swing.*;
 
 import java.awt.*;
 
-public class MainDashboard extends JFrame {
+public class SystemManagement extends JFrame {
     private JPanel cardPanel;
     private CardLayout cardLayout;
 
-    public MainDashboard() {
+    public SystemManagement() {
         setTitle("Hệ thống Quản lý Trung tâm Anh ngữ");
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -82,7 +82,7 @@ public class MainDashboard extends JFrame {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception ignored) {}
             
-            new MainDashboard().setVisible(true);
+            new SystemManagement().setVisible(true);
         });
     }
 }

@@ -11,78 +11,201 @@ import vn.edu.ute.util.ValidatorUtil;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.io.File;
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.text.DecimalFormat;
+import java.util.List;
 
 public class FinancePanel extends JPanel {
     private final FinanceService financeService = new FinanceServiceImpl();
+    
+    // UI Components
     private JTextField txtInvoiceId, txtAmount, txtRefCode, txtSearch;
     private JComboBox<PaymentMethod> cbMethod;
     private JButton btnPay, btnExport;
-    private JLabel lblStatus; // Hiển thị trạng thái/lỗi trực tiếp trên UI
+    private JLabel lblStatus;
+    
+    // Table Components
+    private JTable invoiceTable;
+    private DefaultTableModel tableModel;
+
+    // Trình định dạng tiền tệ (VD: 6,500,000)
+    private final DecimalFormat currencyFormat = new DecimalFormat("#,###");
 
     public FinancePanel() {
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
-        initTopPanel();
-        initFormPanel();
+        add(initTopPanel(), BorderLayout.NORTH);
+        add(initTablePanel(), BorderLayout.CENTER); 
+        add(initFormPanel(), BorderLayout.SOUTH);   
+        
+        // Tải dữ liệu thật từ DB
+        loadDataToTable(); 
     }
 
-    private void initTopPanel() {
+    private JPanel initTopPanel() {
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        topPanel.add(new JLabel("Tìm kiếm Hóa đơn:"));
+        topPanel.add(new JLabel("Tìm kiếm Sinh viên:"));
         
         txtSearch = new JTextField(20);
-        // Tính năng Search-as-you-type (Tìm kiếm ngay khi gõ)
         txtSearch.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { filterData(); }
             public void removeUpdate(DocumentEvent e) { filterData(); }
             public void changedUpdate(DocumentEvent e) { filterData(); }
         });
         
-        btnExport = new JButton("Xuất CSV");
+        btnExport = new JButton("Xuất CSV Doanh Thu");
         btnExport.addActionListener(e -> exportData());
 
         topPanel.add(txtSearch);
         topPanel.add(btnExport);
-        add(topPanel, BorderLayout.NORTH);
+        return topPanel;
     }
 
-    private void initFormPanel() {
+    private JPanel initTablePanel() {
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBorder(BorderFactory.createTitledBorder("Danh sách Hóa đơn chờ thanh toán"));
+
+        String[] columns = {"ID Hóa đơn", "Sinh viên", "Tổng tiền (VNĐ)", "Ngày lập", "Trạng thái"};
+        tableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+
+        invoiceTable = new JTable(tableModel);
+        invoiceTable.setRowHeight(25);
+        
+        invoiceTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && invoiceTable.getSelectedRow() != -1) {
+                int row = invoiceTable.getSelectedRow();
+                txtInvoiceId.setText(tableModel.getValueAt(row, 0).toString());
+                
+                // Lấy số tiền từ bảng (đã có dấu phẩy) và gán xuống Form
+                String amountStr = tableModel.getValueAt(row, 2).toString();
+                txtAmount.setText(amountStr);
+                
+                lblStatus.setText(" ");
+            }
+        });
+
+        tablePanel.add(new JScrollPane(invoiceTable), BorderLayout.CENTER);
+        return tablePanel;
+    }
+
+    private JPanel initFormPanel() {
         JPanel formContainer = new JPanel(new BorderLayout());
         formContainer.setBorder(BorderFactory.createTitledBorder("Thanh toán Hóa đơn"));
 
-        JPanel paymentForm = new JPanel(new GridLayout(6, 2, 10, 10));
+        // SỬA LẠI LAYOUT: Dùng GridLayout 2 dòng, 4 cột để hiển thị 4 cặp Label - Field ngay ngắn
+        JPanel paymentForm = new JPanel(new GridLayout(2, 4, 15, 10));
+        paymentForm.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         txtInvoiceId = new JTextField();
+        txtInvoiceId.setEditable(false); 
         txtAmount = new JTextField();
         txtRefCode = new JTextField();
         cbMethod = new JComboBox<>(PaymentMethod.values());
+        
         lblStatus = new JLabel(" ");
         lblStatus.setForeground(Color.RED);
 
-        paymentForm.add(new JLabel("ID Hóa đơn cần thanh toán:")); paymentForm.add(txtInvoiceId);
-        paymentForm.add(new JLabel("Số tiền thanh toán (VNĐ):")); paymentForm.add(txtAmount);
+        // --- UX TỐI ƯU 1: Xử lý bật/tắt ô Mã giao dịch ---
+        txtRefCode.setEnabled(false);
+        txtRefCode.setBackground(new Color(240, 240, 240)); // Màu xám khi khóa
+
+        cbMethod.addActionListener(e -> {
+            PaymentMethod method = (PaymentMethod) cbMethod.getSelectedItem();
+            if (method == PaymentMethod.Cash) {
+                txtRefCode.setEnabled(false);
+                txtRefCode.setText(""); 
+                txtRefCode.setBackground(new Color(240, 240, 240));
+            } else {
+                txtRefCode.setEnabled(true);
+                txtRefCode.setBackground(Color.WHITE);
+            }
+        });
+
+        // --- UX TỐI ƯU 2: Định dạng ô Số tiền (Auto-format) ---
+        txtAmount.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                // Xóa dấu phẩy đi để user dễ gõ số
+                txtAmount.setText(txtAmount.getText().replace(",", ""));
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                // Định dạng lại có dấu phẩy khi user click ra ngoài
+                String text = txtAmount.getText().replace(",", "").trim();
+                if (!text.isEmpty()) {
+                    try {
+                        double val = Double.parseDouble(text);
+                        txtAmount.setText(currencyFormat.format(val));
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        });
+
+        // Add tuần tự để xếp thành 2 hàng chuẩn xác:
+        paymentForm.add(new JLabel("ID Hóa đơn:")); paymentForm.add(txtInvoiceId);
+        paymentForm.add(new JLabel("Số tiền (VNĐ):")); paymentForm.add(txtAmount);
+        
         paymentForm.add(new JLabel("Hình thức:")); paymentForm.add(cbMethod);
-        paymentForm.add(new JLabel("Mã giao dịch (Nếu có):")); paymentForm.add(txtRefCode);
+        paymentForm.add(new JLabel("Mã giao dịch:")); paymentForm.add(txtRefCode);
         
         btnPay = new JButton("Xác nhận Thanh toán");
-        btnPay.addActionListener(e -> processPaymentAsync()); // Sử dụng hàm Async
+        btnPay.addActionListener(e -> processPaymentAsync());
         
-        paymentForm.add(lblStatus); // Chỗ trống hiện lỗi
-        paymentForm.add(btnPay);
+        JPanel bottomAction = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bottomAction.add(lblStatus);
+        bottomAction.add(btnPay);
 
-        formContainer.add(paymentForm, BorderLayout.NORTH);
-        add(formContainer, BorderLayout.CENTER);
+        formContainer.add(paymentForm, BorderLayout.CENTER);
+        formContainer.add(bottomAction, BorderLayout.SOUTH);
+        
+        return formContainer;
+    }
+
+    private void loadDataToTable() {
+        tableModel.setRowCount(0);
+        try {
+            List<Invoice> invoices = financeService.getUnpaidInvoices();
+            if (invoices != null) {
+                invoices.forEach(inv -> {
+                    tableModel.addRow(new Object[]{
+                        inv.getInvoiceId(),
+                        inv.getStudent() != null ? inv.getStudent().getFullName() : "N/A",
+                        currencyFormat.format(inv.getTotalAmount()), // Định dạng tiền tệ trên bảng
+                        inv.getIssueDate(),
+                        inv.getStatus()
+                    });
+                });
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi tải dữ liệu: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void filterData() {
-        // Lambda để xử lý logic tìm kiếm (sẽ áp dụng khi bạn có JTable danh sách hóa đơn)
         String keyword = txtSearch.getText().toLowerCase();
-        System.out.println("Đang tìm kiếm: " + keyword);
+        try {
+            List<Invoice> invoices = financeService.getUnpaidInvoices();
+            tableModel.setRowCount(0);
+            invoices.stream()
+                    .filter(inv -> inv.getStudent() != null && inv.getStudent().getFullName().toLowerCase().contains(keyword))
+                    .forEach(inv -> tableModel.addRow(new Object[]{
+                            inv.getInvoiceId(), 
+                            inv.getStudent().getFullName(), 
+                            currencyFormat.format(inv.getTotalAmount()), // Định dạng khi filter
+                            inv.getIssueDate(), 
+                            inv.getStatus()
+                    }));
+        } catch (Exception ignored) {}
     }
 
     private void exportData() {
@@ -94,9 +217,8 @@ public class FinancePanel extends JPanel {
             if (!path.endsWith(".csv")) path += ".csv";
             
             try {
-                // Giả lập lấy danh sách Payment từ DB (Bạn cần dùng financeRepo thực tế)
-                java.util.List<Payment> dummyList = new ArrayList<>(); 
-                CsvExportUtil.exportPaymentsToCsv(dummyList, path);
+                List<Payment> realPayments = financeService.getAllPayments(); 
+                CsvExportUtil.exportPaymentsToCsv(realPayments, path);
                 JOptionPane.showMessageDialog(this, "Xuất file thành công: " + path);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Lỗi khi xuất file: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -104,39 +226,42 @@ public class FinancePanel extends JPanel {
         }
     }
 
-    // Xử lý thanh toán sử dụng Thread-safe (SwingWorker)
     private void processPaymentAsync() {
-        // 1. Validation bằng Lambda (Sử dụng ValidatorUtil đã tạo)
+        // Cần loại bỏ dấu phẩy trước khi check valid và parse dữ liệu
+        String rawAmount = txtAmount.getText().replace(",", "").trim();
+
         if (!ValidatorUtil.isNotEmpty.test(txtInvoiceId.getText())) {
-            lblStatus.setText("Vui lòng nhập ID Hóa đơn!");
+            lblStatus.setText("Vui lòng chọn Hóa đơn từ bảng trên!");
             return;
         }
-        if (!ValidatorUtil.isValidAmount.test(txtAmount.getText())) {
+        if (!ValidatorUtil.isValidAmount.test(rawAmount)) {
             lblStatus.setText("Số tiền không hợp lệ!");
             return;
         }
 
-        lblStatus.setText("Đang xử lý...");
-        btnPay.setEnabled(false); // Khóa nút tránh click đúp
-
-        BigDecimal amount = new BigDecimal(txtAmount.getText());
         PaymentMethod method = (PaymentMethod) cbMethod.getSelectedItem();
-        String refCode = txtRefCode.getText();
-        String invoiceIdStr = txtInvoiceId.getText();
+        String refCode = txtRefCode.getText().trim();
 
-        // 2. Sử dụng SwingWorker để gọi DB dưới Background, không làm đơ giao diện
+        // Bắt buộc nhập mã giao dịch nếu chuyển khoản/quẹt thẻ
+        if (method != PaymentMethod.Cash && refCode.isEmpty()) {
+            lblStatus.setText("Vui lòng nhập Mã giao dịch cho hình thức chuyển khoản/thẻ!");
+            return;
+        }
+
+        lblStatus.setText("Đang xử lý...");
+        btnPay.setEnabled(false);
+
+        BigDecimal amount = new BigDecimal(rawAmount);
+        Long invoiceId = Long.parseLong(txtInvoiceId.getText());
+
         SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
             @Override
             protected Boolean doInBackground() throws Exception {
-                // Giả lập lấy Invoice từ DB
-                Invoice dummyInvoice = new Invoice(); 
-                dummyInvoice.setInvoiceId(Long.parseLong(invoiceIdStr));
-                dummyInvoice.setTotalAmount(new BigDecimal("1000000")); // Mock data
-                
-                financeService.processPayment(dummyInvoice, amount, method, refCode);
-                
-                // Giả lập thời gian delay mạng/database
-                Thread.sleep(1000); 
+                Invoice realInvoice = financeService.getInvoiceById(invoiceId);
+                if (realInvoice == null) {
+                    throw new Exception("Hóa đơn không tồn tại!");
+                }
+                financeService.processPayment(realInvoice, amount, method, refCode);
                 return true;
             }
 
@@ -144,19 +269,21 @@ public class FinancePanel extends JPanel {
             protected void done() {
                 btnPay.setEnabled(true);
                 try {
-                    get(); // Kiểm tra xem có Exception nào quăng ra từ doInBackground không
-                    lblStatus.setForeground(new Color(0, 153, 0)); // Màu xanh lá
+                    get(); 
+                    lblStatus.setForeground(new Color(0, 153, 0));
                     lblStatus.setText("Thanh toán thành công!");
                     JOptionPane.showMessageDialog(FinancePanel.this, "Thanh toán thành công!");
                     
-                    // Xóa form
                     txtInvoiceId.setText("");
                     txtAmount.setText("");
                     txtRefCode.setText("");
+                    cbMethod.setSelectedIndex(0); // Trả về mặc định
+                    invoiceTable.clearSelection();
+                    
+                    loadDataToTable();
                 } catch (Exception ex) {
                     lblStatus.setForeground(Color.RED);
-                    lblStatus.setText("Lỗi hệ thống khi thanh toán!");
-                    ex.printStackTrace();
+                    lblStatus.setText("Lỗi: " + ex.getMessage());
                 }
             }
         };

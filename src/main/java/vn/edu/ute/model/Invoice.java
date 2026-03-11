@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "invoices")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -26,7 +27,7 @@ public class Invoice {
     private Student student;
 
     @Column(name = "total_amount", nullable = false)
-    private BigDecimal totalAmount = BigDecimal.ZERO; // Đảm bảo độ chính xác tài chính
+    private BigDecimal totalAmount = BigDecimal.ZERO; 
 
     @Column(name = "issue_date", nullable = false)
     private LocalDate issueDate = LocalDate.now();
@@ -44,7 +45,6 @@ public class Invoice {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    // Trong class Invoice.java
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotion_id")
     private Promotion promotion;

@@ -20,6 +20,7 @@ public class PlacementTest {
     private Long testId;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 

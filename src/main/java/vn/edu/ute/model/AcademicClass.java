@@ -29,12 +29,12 @@ public class AcademicClass {
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
-    @ToString.Exclude // <--- THÊM DÒNG NÀY
+    @ToString.Exclude 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id")
     private Teacher teacher;
 
-    @ToString.Exclude // <--- THÊM DÒNG NÀY
+    @ToString.Exclude 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
     private Room room;

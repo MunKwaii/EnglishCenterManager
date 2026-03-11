@@ -25,4 +25,14 @@ public class AcademicOperationServiceImpl implements AcademicOperationService {
         }
         operationRepo.saveResultsBatch(results);
     }
+
+    @Override
+    public List<Attendance> getAttendancesByClassId(Long classId) throws Exception {
+        return operationRepo.getAttendancesByClassId(classId);
+    }
+
+    @Override
+    public List<Result> getResultsByClassId(Long classId) throws Exception {
+        return operationRepo.getResultsByClassId(classId);
+    }
 }

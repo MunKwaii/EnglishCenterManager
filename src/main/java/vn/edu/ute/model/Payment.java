@@ -8,12 +8,10 @@ import vn.edu.ute.model.enums.PaymentStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Chú thích: Lớp thực thể ánh xạ bảng 'payments'.
- */
 @Entity
 @Table(name = "payments")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -36,11 +34,9 @@ public class Payment {
     @JoinColumn(name = "invoice_id")
     private Invoice invoice;
 
-    // Chú thích: Khai báo precision và scale cho DECIMAL(15,2)
     @Column(name = "amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
 
-    // Chú thích: Khớp với DATETIME DEFAULT CURRENT_TIMESTAMP trong SQL
     @Column(name = "payment_date", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime paymentDate = LocalDateTime.now();
 
