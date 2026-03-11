@@ -1,8 +1,9 @@
-package vn.edu.ute.view;
+package vn.edu.ute.view.test;
 
+import vn.edu.ute.view.*;
 import javax.swing.*;
 
-public class TestPlacementUI {
+public class TestBranchUI {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
@@ -11,13 +12,12 @@ public class TestPlacementUI {
                 e.printStackTrace();
             }
 
-            // Fix the LazyInitializationException for Student entities (just basic setup)
-            JFrame frame = new JFrame("Test Placement Management UI");
+            JFrame frame = new JFrame("Test Branch Management UI");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setSize(800, 600);
             frame.setLocationRelativeTo(null);
 
-            frame.add(new PlacementTestPanel());
+            frame.add(new BranchPanel());
 
             frame.setVisible(true);
         });

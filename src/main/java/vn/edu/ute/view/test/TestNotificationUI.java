@@ -1,5 +1,6 @@
-package vn.edu.ute.view;
+package vn.edu.ute.view.test;
 
+import vn.edu.ute.view.*;
 import javax.swing.*;
 
 public class TestNotificationUI {
