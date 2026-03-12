@@ -34,6 +34,9 @@ public class NotificationPanel extends JPanel {
         add(createTablePanel(), BorderLayout.CENTER);
         add(createButtonPanel(), BorderLayout.SOUTH);
 
+        // PHÂN QUYỀN: Ẩn/vô hiệu hóa nút nếu không có quyền
+        applyPermissions();
+
         loadDataToTable(notificationService.getAllNotifications());
     }
 
@@ -241,7 +244,7 @@ public class NotificationPanel extends JPanel {
             cbTargetRole.setEnabled(false);
 
             // Hiển thị thông báo chế độ chỉ đọc
-            JLabel lblReadOnly = new JLabel("⚠️ Chế độ chỉ đọc - Bạn không có quyền gửi thông báo", SwingConstants.CENTER);
+            JLabel lblReadOnly = new JLabel("Chế độ chỉ đọc - Bạn không có quyền gửi thông báo", SwingConstants.CENTER);
             lblReadOnly.setForeground(new Color(231, 76, 60));
             lblReadOnly.setFont(new Font("Segoe UI", Font.BOLD, 14));
             add(lblReadOnly, BorderLayout.NORTH);

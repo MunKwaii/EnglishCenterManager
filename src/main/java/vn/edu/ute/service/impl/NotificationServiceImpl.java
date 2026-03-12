@@ -95,6 +95,11 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void updateNotification(Notification n) throws Exception {
+        // KIỂM TRA QUYỀN
+        if (n.getCreatedByUser() == null || !PermissionUtils.canManageNotifications(n.getCreatedByUser())) {
+            throw new Exception("Bạn không có quyền sửa thông báo! Chỉ Admin hoặc Staff (Admin/Manager) mới được phép.");
+        }
+
         // Kiểm tra notification có tồn tại không
         if (n.getNotificationId() == null) {
             throw new Exception("Không tìm thấy ID thông báo để cập nhật!");
@@ -118,6 +123,12 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void deleteNotification(Long id) throws Exception {
+        // KIỂM TRA QUYỀN
+        UserAccount currentUser = UserSession.getCurrentUser();
+        if (currentUser == null || !PermissionUtils.canManageNotifications(currentUser)) {
+            throw new Exception("Bạn không có quyền xóa thông báo! Chỉ Admin hoặc Staff (Admin/Manager) mới được phép.");
+        }
+
         repo.deleteById(id);
     }
 
