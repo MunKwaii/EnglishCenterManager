@@ -1,10 +1,13 @@
 package vn.edu.ute.service.impl;
 
 import vn.edu.ute.model.Notification;
+import vn.edu.ute.model.UserAccount;
 import vn.edu.ute.model.enums.NotificationTargetRole;
 import vn.edu.ute.repository.NotificationRepository;
 import vn.edu.ute.repository.impl.NotificationRepositoryImpl;
 import vn.edu.ute.service.NotificationService;
+import vn.edu.ute.util.PermissionUtils;
+import vn.edu.ute.util.UserSession;
 
 import java.util.Comparator;
 import java.util.List;
@@ -120,6 +123,35 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<Notification> getAllNotifications() {
-        return repo.findAll(); //
+        UserAccount currentUser = UserSession.getCurrentUser();
+        if (currentUser == null) {
+            return List.of(); // Không login thì không xem được gì
+        }
+
+        List<Notification> allNotifications = repo.findAll();
+
+        // Admin và Staff: Xem hết
+        if (PermissionUtils.canViewAllNotifications(currentUser)) {
+            return allNotifications;
+        }
+
+        // Student: Chỉ xem Student + All
+        if (currentUser.getRole() == vn.edu.ute.model.enums.UserRole.Student) {
+            return allNotifications.stream()
+                    .filter(n -> n.getTargetRole() == NotificationTargetRole.Student
+                              || n.getTargetRole() == NotificationTargetRole.All)
+                    .collect(Collectors.toList());
+        }
+
+        // Teacher: Chỉ xem Teacher + All
+        if (currentUser.getRole() == vn.edu.ute.model.enums.UserRole.Teacher) {
+            return allNotifications.stream()
+                    .filter(n -> n.getTargetRole() == NotificationTargetRole.Teacher
+                              || n.getTargetRole() == NotificationTargetRole.All)
+                    .collect(Collectors.toList());
+        }
+
+        // Mặc định: Không xem được gì
+        return List.of();
     }
 }

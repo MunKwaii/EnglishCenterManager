@@ -39,7 +39,8 @@ public class MainFrame extends JFrame {
         btnTeacher = addMenuButton(pnlSidebar, "Quản lý Giáo viên", e -> showPanel(new TeacherPanel()));
         btnStudent = addMenuButton(pnlSidebar, "Quản lý Học viên", e -> showPanel(new StudentPanel()));
         btnClass = addMenuButton(pnlSidebar, "Quản lý Lớp học", e -> showPanel(new ClassPanel()));
-        btnNotification = addMenuButton(pnlSidebar, "Thông báo hệ thống", e -> showPanel(new NotificationPanel()));
+        btnNotification = addMenuButton(pnlSidebar, "Thông báo hệ thống",
+                e -> showPanel(new NotificationPanel(currentUser))); // Truyền currentUser vào
 
         // GỌI PHÂN QUYỀN TẠI ĐÂY
         PermissionUtils.applyMenuPermissions(currentUser.getRole(), btnTeacher, btnStudent, btnClass, null);

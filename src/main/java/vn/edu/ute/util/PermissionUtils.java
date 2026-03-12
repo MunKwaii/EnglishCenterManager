@@ -1,6 +1,8 @@
 package vn.edu.ute.util;
 
 import javax.swing.*;
+import vn.edu.ute.model.UserAccount;
+import vn.edu.ute.model.enums.StaffRole;
 import vn.edu.ute.model.enums.UserRole;
 
 public class PermissionUtils {
@@ -34,5 +36,36 @@ public class PermissionUtils {
         if (role == UserRole.Staff) {
             if (btnAccount != null) btnAccount.setVisible(false);
         }
+    }
+
+    /**
+     * Kiểm tra user có quyền GỬI/SỬA/XÓA thông báo không
+     * Chỉ Admin (UserRole) và Staff có role Admin/Manager mới được phép
+     */
+    public static boolean canManageNotifications(UserAccount user) {
+        if (user == null) return false;
+
+        // Admin (UserRole) luôn được phép
+        if (user.getRole() == UserRole.Admin) {
+            return true;
+        }
+
+        // Staff với StaffRole = Admin hoặc Manager được phép
+        if (user.getRole() == UserRole.Staff && user.getStaff() != null) {
+            StaffRole staffRole = user.getStaff().getRole();
+            return staffRole == StaffRole.Admin || staffRole == StaffRole.Manager;
+        }
+
+        // Teacher, Student, Staff khác: không được phép
+        return false;
+    }
+
+    /**
+     * Kiểm tra user có quyền XEM tất cả thông báo không
+     * Admin và Staff được xem hết, Teacher và Student chỉ xem của mình
+     */
+    public static boolean canViewAllNotifications(UserAccount user) {
+        if (user == null) return false;
+        return user.getRole() == UserRole.Admin || user.getRole() == UserRole.Staff;
     }
 }

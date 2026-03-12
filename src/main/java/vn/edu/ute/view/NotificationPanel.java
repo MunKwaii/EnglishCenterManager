@@ -5,15 +5,17 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 import vn.edu.ute.model.Notification;
+import vn.edu.ute.model.UserAccount;
 import vn.edu.ute.model.enums.NotificationTargetRole;
 import vn.edu.ute.service.NotificationService;
 import vn.edu.ute.service.impl.NotificationServiceImpl;
+import vn.edu.ute.util.PermissionUtils;
 
 public class NotificationPanel extends JPanel {
 
     // Services
     private final NotificationService notificationService = new NotificationServiceImpl();
-
+    private UserAccount currentUser; 
     // UI Components
     private JTable table;
     private DefaultTableModel tableModel;
@@ -22,7 +24,8 @@ public class NotificationPanel extends JPanel {
     private JComboBox<NotificationTargetRole> cbTargetRole;
     private JButton btnSend, btnUpdate, btnDelete, btnSearch, btnRefresh;
 
-    public NotificationPanel() {
+    public NotificationPanel(UserAccount currentUser) {
+        this.currentUser = currentUser;
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
@@ -69,7 +72,7 @@ public class NotificationPanel extends JPanel {
 
     private JPanel createTablePanel() {
         JPanel tablePanel = new JPanel(new BorderLayout());
-        String[] columns = {"ID", "Tiêu đề", "Đối tượng", "Ngày tạo"};
+        String[] columns = {"ID", "Tiêu đề", "Người tạo", "Đối tượng", "Ngày tạo"};
 
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
@@ -136,8 +139,12 @@ public class NotificationPanel extends JPanel {
         tableModel.setRowCount(0);
         if (list != null) {
             for (Notification n : list) {
+                String createdBy = (n.getCreatedByUser() != null)
+                        ? n.getCreatedByUser().getUsername()
+                        : "N/A";
+
                 tableModel.addRow(new Object[]{
-                        n.getNotificationId(), n.getTitle(), n.getTargetRole(), n.getCreatedAt()
+                        n.getNotificationId(), n.getTitle(), createdBy, n.getTargetRole(), n.getCreatedAt()
                 });
             }
         }
@@ -151,6 +158,7 @@ public class NotificationPanel extends JPanel {
                         .title(txtTitle.getText())
                         .content(taContent.getText())
                         .targetRole((NotificationTargetRole) cbTargetRole.getSelectedItem())
+                        .createdByUser(currentUser)
                         .build();
                 notificationService.createNotification(n);
                 JOptionPane.showMessageDialog(this, "Gửi thông báo thành công!");
@@ -172,6 +180,7 @@ public class NotificationPanel extends JPanel {
                         .title(txtTitle.getText())
                         .content(taContent.getText())
                         .targetRole((NotificationTargetRole) cbTargetRole.getSelectedItem())
+                        .createdByUser(currentUser)
                         .build();
                 notificationService.updateNotification(n); // Gọi updateNotification() riêng biệt
                 JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
@@ -211,5 +220,40 @@ public class NotificationPanel extends JPanel {
         txtSearch.setText("");
         cbTargetRole.setSelectedIndex(0);
         loadDataToTable(notificationService.getAllNotifications());
+    }
+
+    /**
+     * Phân quyền: Chỉ Admin và Staff (Admin/Manager) mới được gửi/sửa/xóa
+     * Student và Teacher chỉ được XEM thông báo của mình
+     */
+    private void applyPermissions() {
+        boolean canManage = PermissionUtils.canManageNotifications(currentUser);
+
+        if (!canManage) {
+            // Vô hiệu hóa các nút quản lý
+            btnSend.setEnabled(false);
+            btnUpdate.setEnabled(false);
+            btnDelete.setEnabled(false);
+
+            // Vô hiệu hóa form soạn thảo
+            txtTitle.setEditable(false);
+            taContent.setEditable(false);
+            cbTargetRole.setEnabled(false);
+
+            // Hiển thị thông báo chế độ chỉ đọc
+            JLabel lblReadOnly = new JLabel("⚠️ Chế độ chỉ đọc - Bạn không có quyền gửi thông báo", SwingConstants.CENTER);
+            lblReadOnly.setForeground(new Color(231, 76, 60));
+            lblReadOnly.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            add(lblReadOnly, BorderLayout.NORTH);
+
+            // Di chuyển form xuống dưới label cảnh báo
+            Component formPanel = getComponent(0);
+            remove(formPanel);
+
+            JPanel topPanel = new JPanel(new BorderLayout());
+            topPanel.add(lblReadOnly, BorderLayout.NORTH);
+            topPanel.add(formPanel, BorderLayout.CENTER);
+            add(topPanel, BorderLayout.NORTH);
+        }
     }
 }
