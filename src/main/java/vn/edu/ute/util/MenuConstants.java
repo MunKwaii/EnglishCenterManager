@@ -20,6 +20,7 @@ public class MenuConstants {
     public static final String MODULE_BRANCH = "Quản lý Chi nhánh";
     public static final String MODULE_ROOM = "Quản lý Phòng học";
     public static final String MODULE_PROMOTION = "Quản lý Khuyến mãi";
+    public static final String MODULE_PLACEMENT_TEST = "Bài Test Đầu vào";
 
     private static final Map<String, List<UserRole>> modulePermissions = new HashMap<>();
 
@@ -42,6 +43,7 @@ public class MenuConstants {
         modulePermissions.put(MODULE_BRANCH, Arrays.asList(UserRole.Admin));
         modulePermissions.put(MODULE_ROOM, staffAndAdmin);
         modulePermissions.put(MODULE_PROMOTION, staffAndAdmin);
+        modulePermissions.put(MODULE_PLACEMENT_TEST, staffAndAdmin);
     }
 
     /**
