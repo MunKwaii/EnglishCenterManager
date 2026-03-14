@@ -30,14 +30,14 @@ public class StudentDashboardPanel extends JPanel {
 
         // 2. Class List (Main Content)
         add(createClassListPanel(), BorderLayout.CENTER);
-        
+
         loadStudentClasses();
     }
 
     private JPanel createWelcomePanel() {
         JPanel pnlWelcome = new JPanel(new BorderLayout());
         pnlWelcome.setOpaque(false);
-        
+
         JLabel lblWelcome = new JLabel("BẢNG ĐIỀU KHIỂN HỌC VIÊN");
         lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 22));
         lblWelcome.setForeground(new Color(44, 62, 80));
@@ -47,7 +47,7 @@ public class StudentDashboardPanel extends JPanel {
         JButton btnProgress = new JButton("Xem Tiến độ học tập");
         btnProgress.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnProgress.setBackground(new Color(142, 68, 173));
-        btnProgress.setForeground(Color.WHITE);
+        btnProgress.setForeground(Color.BLACK);
         btnProgress.setFocusPainted(false);
         btnProgress.addActionListener(e -> {
             StudentProgressDialog progressDialog = new StudentProgressDialog(SwingUtilities.getWindowAncestor(this));
@@ -58,7 +58,7 @@ public class StudentDashboardPanel extends JPanel {
         JButton btnFee = new JButton("Xem thông tin Học phí");
         btnFee.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnFee.setBackground(new Color(39, 174, 96));
-        btnFee.setForeground(Color.WHITE);
+        btnFee.setForeground(Color.BLACK);
         btnFee.setFocusPainted(false);
         btnFee.addActionListener(e -> {
             StudentFeeDialog feeDialog = new StudentFeeDialog(SwingUtilities.getWindowAncestor(this));
@@ -76,7 +76,8 @@ public class StudentDashboardPanel extends JPanel {
     }
 
     private JScrollPane createClassListPanel() {
-        pnlClassCards = new JPanel(new GridLayout(0, 2, 20, 20)); // Xếp thẻ lớp học 2 cột cho Student để dễ nhìn giờ học
+        pnlClassCards = new JPanel(new GridLayout(0, 2, 20, 20)); // Xếp thẻ lớp học 2 cột cho Student để dễ nhìn giờ
+                                                                  // học
         pnlClassCards.setOpaque(false);
 
         JScrollPane scrollPane = new JScrollPane(pnlClassCards);
@@ -127,8 +128,7 @@ public class StudentDashboardPanel extends JPanel {
         card.setBackground(Color.WHITE);
         card.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
-                new EmptyBorder(15, 15, 15, 15)
-        ));
+                new EmptyBorder(15, 15, 15, 15)));
 
         // Title lớp học
         JLabel lblClassName = new JLabel(cls.getClassName());
@@ -142,21 +142,22 @@ public class StudentDashboardPanel extends JPanel {
         pnlInfo.add(new JLabel("Khóa học: " + (cls.getCourse() != null ? cls.getCourse().getCourseName() : "N/A")));
         pnlInfo.add(new JLabel("Giáo viên: " + (cls.getTeacher() != null ? cls.getTeacher().getFullName() : "N/A")));
         pnlInfo.add(new JLabel("Phòng học: " + (cls.getRoom() != null ? cls.getRoom().getRoomName() : "N/A")));
-        pnlInfo.add(new JLabel("Thời gian: " + cls.getStartDate() + " -> " + (cls.getEndDate() != null ? cls.getEndDate() : "Đang cập nhật")));
-        
+        pnlInfo.add(new JLabel("Thời gian: " + cls.getStartDate() + " -> "
+                + (cls.getEndDate() != null ? cls.getEndDate() : "Đang cập nhật")));
+
         card.add(pnlInfo, BorderLayout.CENTER);
 
         // Các nút thao tác
         JPanel pnlActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         pnlActions.setOpaque(false);
-        
+
         JLabel lblEnrollStatus = new JLabel("Trạng thái: " + enr.getStatus());
         lblEnrollStatus.setFont(new Font("Segoe UI", Font.ITALIC, 12));
         pnlActions.add(lblEnrollStatus);
 
         JButton btnViewScore = new JButton("Xem bảng điểm");
         btnViewScore.setBackground(new Color(52, 152, 219));
-        btnViewScore.setForeground(Color.WHITE);
+        btnViewScore.setForeground(Color.BLACK);
         btnViewScore.setFocusPainted(false);
 
         // Mở dialog Xem bảng điểm
@@ -168,14 +169,16 @@ public class StudentDashboardPanel extends JPanel {
         pnlActions.add(btnViewScore);
 
         // Nút xem chứng nhận (chỉ hiện khi đã có chứng nhận)
-        Certificate cert = certificateService.getCertificateByStudentIdAndClassId(enr.getStudent().getStudentId(), cls.getClassId());
+        Certificate cert = certificateService.getCertificateByStudentIdAndClassId(enr.getStudent().getStudentId(),
+                cls.getClassId());
         if (cert != null) {
             JButton btnCert = new JButton("Xem chứng nhận");
             btnCert.setBackground(new Color(241, 196, 15));
             btnCert.setForeground(Color.BLACK);
             btnCert.setFocusPainted(false);
             btnCert.addActionListener(e -> {
-                StudentCertificateDialog dialog = new StudentCertificateDialog(SwingUtilities.getWindowAncestor(this), cert);
+                StudentCertificateDialog dialog = new StudentCertificateDialog(SwingUtilities.getWindowAncestor(this),
+                        cert);
                 dialog.setVisible(true);
             });
             pnlActions.add(btnCert);

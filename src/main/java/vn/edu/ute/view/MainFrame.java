@@ -44,7 +44,9 @@ public class MainFrame extends JFrame {
         currentUser = UserSession.getCurrentUser();
 
         setTitle("Hệ thống Quản lý MIS - Center");
-        setSize(1200, 800);
+        setMinimumSize(new Dimension(900, 600));  // kích thước tối thiểu
+        setSize(1100, 720);                       // kích thước mặc định nhỏ hơn
+        setExtendedState(JFrame.MAXIMIZED_BOTH);  // mở toàn màn hình khi khởi động
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
@@ -52,16 +54,22 @@ public class MainFrame extends JFrame {
         // --- 1. SIDEBAR ---
         JPanel pnlSidebar = new JPanel();
         pnlSidebar.setLayout(new BoxLayout(pnlSidebar, BoxLayout.Y_AXIS));
-        pnlSidebar.setBackground(new Color(44, 62, 80));
-        pnlSidebar.setPreferredSize(new Dimension(250, 800));
+        pnlSidebar.setBackground(new Color(33, 47, 60));
+        pnlSidebar.setPreferredSize(new Dimension(200, 600));
 
-        JLabel lblBrand = new JLabel("MIS MANAGEMENT");
-        lblBrand.setForeground(Color.WHITE);
-        lblBrand.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblBrand.setBorder(BorderFactory.createEmptyBorder(30, 20, 30, 20));
+        JLabel lblBrand = new JLabel("MIS CENTER");
+        lblBrand.setForeground(new Color(93, 173, 226));
+        lblBrand.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblBrand.setBorder(BorderFactory.createEmptyBorder(18, 15, 18, 15));
         lblBrand.setAlignmentX(Component.CENTER_ALIGNMENT);
         pnlSidebar.add(lblBrand);
-        pnlSidebar.add(Box.createVerticalStrut(20));
+
+        // Đường phan cách
+        JSeparator sep = new JSeparator();
+        sep.setForeground(new Color(52, 73, 94));
+        sep.setMaximumSize(new Dimension(200, 1));
+        pnlSidebar.add(sep);
+        pnlSidebar.add(Box.createVerticalStrut(5));
 
         // --- 2. CONTENT AREA (CardLayout) ---
         cardLayout = new CardLayout();
@@ -70,9 +78,10 @@ public class MainFrame extends JFrame {
 
         // Card Mặc định (Home)
         JPanel pnlHome = new JPanel(new BorderLayout());
-        pnlHome.setBackground(Color.WHITE);
-        JLabel lblWelcome = new JLabel("CHÀO MỪNG TRỞ LẠI, " + currentUser.getUsername().toUpperCase(), SwingConstants.CENTER);
-        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        pnlHome.setBackground(new Color(245, 248, 250));
+        JLabel lblWelcome = new JLabel("✨ Chào mừng trở lại, " + currentUser.getUsername().toUpperCase() + "!", SwingConstants.CENTER);
+        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblWelcome.setForeground(new Color(44, 62, 80));
         pnlHome.add(lblWelcome, BorderLayout.CENTER);
         pnlContent.add(pnlHome, "Home");
         add(pnlContent, BorderLayout.CENTER);
@@ -87,15 +96,17 @@ public class MainFrame extends JFrame {
         scrollSidebar.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollSidebar.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollSidebar.setBorder(BorderFactory.createEmptyBorder());
-        scrollSidebar.setPreferredSize(new Dimension(250, 800));
+        scrollSidebar.setPreferredSize(new Dimension(200, 600));
+        scrollSidebar.getVerticalScrollBar().setUnitIncrement(12);
         
         add(scrollSidebar, BorderLayout.WEST);
 
         // --- 3. STATUS BAR ---
-        JPanel pnlStatus = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        pnlStatus.setBackground(new Color(236, 240, 241));
-        lblStatus = new JLabel("Đang đăng nhập: " + currentUser.getUsername() + " | Quyền hạn: " + currentUser.getRole());
-        lblStatus.setFont(new Font("Segoe UI", Font.ITALIC, 13));
+        JPanel pnlStatus = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 4));
+        pnlStatus.setBackground(new Color(44, 62, 80));
+        lblStatus = new JLabel("●  " + currentUser.getUsername() + "  |  " + currentUser.getRole());
+        lblStatus.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        lblStatus.setForeground(new Color(189, 195, 199));
         pnlStatus.add(lblStatus);
         add(pnlStatus, BorderLayout.SOUTH);
     }
@@ -131,16 +142,33 @@ public class MainFrame extends JFrame {
 
     private JButton addMenuButton(JPanel sidebar, String text, java.awt.event.ActionListener action) {
         JButton btn = new JButton(text);
-        btn.setMaximumSize(new Dimension(250, 50));
-        btn.setBackground(new Color(44, 62, 80));
+        btn.setMaximumSize(new Dimension(200, 40));
+        btn.setPreferredSize(new Dimension(200, 40));
+        Color bgNormal  = new Color(33, 47, 60);
+        Color bgHover   = new Color(52, 152, 219);
+        Color bgLogout  = new Color(169, 50, 38);
+        boolean isLogout = text.equals("Đăng xuất");
+        btn.setBackground(isLogout ? bgLogout : bgNormal);
         btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
         btn.setBorderPainted(false);
-        btn.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        btn.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        btn.setHorizontalAlignment(SwingConstants.LEFT);
+        btn.setBorder(BorderFactory.createEmptyBorder(0, 15, 0, 0));
         btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        // Hover effects
+        btn.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseEntered(java.awt.event.MouseEvent e) {
+                btn.setBackground(isLogout ? new Color(203, 67, 53) : bgHover);
+            }
+            @Override public void mouseExited(java.awt.event.MouseEvent e) {
+                btn.setBackground(isLogout ? bgLogout : bgNormal);
+            }
+        });
         btn.addActionListener(action);
         sidebar.add(btn);
-        sidebar.add(Box.createVerticalStrut(5));
+        sidebar.add(Box.createVerticalStrut(2));
         return btn;
     }
 
