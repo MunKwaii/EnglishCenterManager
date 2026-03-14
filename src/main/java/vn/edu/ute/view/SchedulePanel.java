@@ -12,6 +12,7 @@ import vn.edu.ute.service.impl.AcademicClassServiceImpl;
 import vn.edu.ute.service.impl.RoomServiceImpl;
 import vn.edu.ute.service.impl.ScheduleServiceImpl;
 import vn.edu.ute.service.impl.TeacherServiceImpl;
+import vn.edu.ute.util.UserSession;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -230,8 +231,37 @@ public class SchedulePanel extends JPanel {
                 btnUpdateSchedule.setEnabled(true);
                 btnDeleteSchedule.setEnabled(true);
                 btnAddSchedule.setEnabled(false);
+
+                // Permission check
+                Long currentTeacherId = UserSession.getTeacherId();
+                if (currentTeacherId != null) {
+                    // It's a teacher logged in. Check if they own this class.
+                    boolean isOwnClass = false;
+                    Object obj = tableModel.getValueAt(row, 4);
+                    String cName = (obj != null) ? obj.toString() : "";
+                    for (int i = 0; i < classCombo.getItemCount(); i++) {
+                        ClassItem ci = classCombo.getItemAt(i);
+                        if (ci.getAcademicClass() != null 
+                            && ci.getAcademicClass().getClassName().equals(cName)
+                            && ci.getAcademicClass().getTeacher() != null
+                            && ci.getAcademicClass().getTeacher().getTeacherId().equals(currentTeacherId)) {
+                            isOwnClass = true;
+                            break;
+                        }
+                    }
+                    if (!isOwnClass) {
+                        btnUpdateSchedule.setEnabled(false);
+                        btnDeleteSchedule.setEnabled(false);
+                        btnAddSchedule.setEnabled(false); // They can't add from someone else's class either, though clearForm handles Add
+                    }
+                }
             }
         });
+
+        // Tùy chỉnh quyền "Thêm" ban đầu cho giáo viên
+        if (UserSession.getTeacherId() != null && classCombo.getItemCount() == 0) {
+            btnAddSchedule.setEnabled(false); // Ko có lớp thì ko cho thêm
+        }
 
         add(formPanel, BorderLayout.SOUTH);
     }
@@ -242,11 +272,22 @@ public class SchedulePanel extends JPanel {
         filterTeacherCombo.addItem(new TeacherItem(null, "Tất cả"));
 
         List<AcademicClass> classes = classService.getAllClasses();
+        Long currentTeacherId = UserSession.getTeacherId();
+        
         if (classes != null) {
             for (AcademicClass c : classes) {
                 ClassItem item = new ClassItem(c, c.getClassName());
                 filterClassCombo.addItem(item);
-                classCombo.addItem(item);
+                
+                // Nếu là giáo viên, chỉ được Add/Update lịch của lớp mà mình dạy
+                if (currentTeacherId != null) {
+                    if (c.getTeacher() != null && c.getTeacher().getTeacherId().equals(currentTeacherId)) {
+                        classCombo.addItem(item);
+                    }
+                } else {
+                    // Admin/Staff thì thấy hết
+                    classCombo.addItem(item);
+                }
             }
         }
 
