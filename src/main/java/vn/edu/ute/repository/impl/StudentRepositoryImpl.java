@@ -48,8 +48,8 @@ public class StudentRepositoryImpl implements StudentRepository {
     public List<Student> findAll() {
         try {
             return txManager.runInTransaction(em -> {
-                // Lấy tất cả học viên có trạng thái Active theo đúng logic bảng students
-                String jpql = "SELECT s FROM Student s WHERE s.status = vn.edu.ute.model.enums.Status.Active";
+                // Lấy tất cả học viên
+                String jpql = "SELECT s FROM Student s";
                 return em.createQuery(jpql, Student.class).getResultList();
             });
         } catch (Exception e) {
