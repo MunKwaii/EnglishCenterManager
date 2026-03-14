@@ -9,6 +9,9 @@ import vn.edu.ute.service.RoomService;
 import vn.edu.ute.service.ScheduleService;
 import vn.edu.ute.service.TeacherService;
 import vn.edu.ute.service.impl.AcademicClassServiceImpl;
+import vn.edu.ute.service.EnrollmentService;
+import vn.edu.ute.model.Enrollment;
+import vn.edu.ute.service.impl.EnrollmentServiceImpl;
 import vn.edu.ute.service.impl.RoomServiceImpl;
 import vn.edu.ute.service.impl.ScheduleServiceImpl;
 import vn.edu.ute.service.impl.TeacherServiceImpl;
@@ -31,6 +34,7 @@ public class SchedulePanel extends JPanel {
     private final AcademicClassService classService = new AcademicClassServiceImpl();
     private final RoomService roomService = new RoomServiceImpl();
     private final TeacherService teacherService = new TeacherServiceImpl();
+    private final EnrollmentService enrollmentService = new EnrollmentServiceImpl();
 
     // Table
     private JTable scheduleTable;
@@ -263,7 +267,13 @@ public class SchedulePanel extends JPanel {
             btnAddSchedule.setEnabled(false); // Ko có lớp thì ko cho thêm
         }
 
-        add(formPanel, BorderLayout.SOUTH);
+        // Tùy chỉnh quyền cho Học viên: Ẩn luôn khu vực Thêm/Sửa/Xóa
+        if (UserSession.getStudentId() != null) {
+            add(formPanel, BorderLayout.SOUTH); // Thay vì xoá hẳn, mình ẩn nó đi để không phá vỡ UI
+            formPanel.setVisible(false);
+        } else {
+            add(formPanel, BorderLayout.SOUTH);
+        }
     }
 
     private void loadInitialData() {
@@ -273,19 +283,43 @@ public class SchedulePanel extends JPanel {
 
         List<AcademicClass> classes = classService.getAllClasses();
         Long currentTeacherId = UserSession.getTeacherId();
+        Long currentStudentId = UserSession.getStudentId();
         
         if (classes != null) {
+            // Đối với Học viên, lấy danh sách các lớp đang theo học
+            List<Long> enrolledClassIds = null;
+            if (currentStudentId != null) {
+                try {
+                    List<Enrollment> enrollments = enrollmentService.getEnrollmentsByStudentId(currentStudentId);
+                    enrolledClassIds = enrollments.stream()
+                        .map(e -> e.getAcademicClass().getClassId())
+                        .collect(Collectors.toList());
+                } catch(Exception e) {
+                    enrolledClassIds = List.of();
+                }
+            }
+
             for (AcademicClass c : classes) {
                 ClassItem item = new ClassItem(c, c.getClassName());
-                filterClassCombo.addItem(item);
                 
-                // Nếu là giáo viên, chỉ được Add/Update lịch của lớp mà mình dạy
+                // --- Xử lý cho Filter ---
+                if (currentStudentId != null) {
+                    // Nếu là Học viên, chỉ hiện các lớp nằm trong ds đăng ký
+                    if (enrolledClassIds != null && enrolledClassIds.contains(c.getClassId())) {
+                        filterClassCombo.addItem(item);
+                    }
+                } else {
+                    // Teacher/Admin/Staff hiện tất cả trong filter
+                    filterClassCombo.addItem(item);
+                }
+                
+                // --- Xử lý cho Form ---
                 if (currentTeacherId != null) {
                     if (c.getTeacher() != null && c.getTeacher().getTeacherId().equals(currentTeacherId)) {
                         classCombo.addItem(item);
                     }
-                } else {
-                    // Admin/Staff thì thấy hết
+                } else if (currentStudentId == null) {
+                    // Admin/Staff thì thấy hết trên form
                     classCombo.addItem(item);
                 }
             }
@@ -313,6 +347,22 @@ public class SchedulePanel extends JPanel {
 
     private void loadSchedules() {
         List<Schedule> list = scheduleService.findAll();
+
+        // Lọc danh sách nếu là Học viên
+        Long currentStudentId = UserSession.getStudentId();
+        if (currentStudentId != null && list != null) {
+            try {
+                List<Enrollment> enrollments = enrollmentService.getEnrollmentsByStudentId(currentStudentId);
+                List<Long> enrolledClassIds = enrollments.stream()
+                    .map(e -> e.getAcademicClass().getClassId())
+                    .collect(Collectors.toList());
+                
+                list = list.stream()
+                    .filter(s -> s.getAcademicClass() != null && enrolledClassIds.contains(s.getAcademicClass().getClassId()))
+                    .collect(Collectors.toList());
+            } catch (Exception e) {}
+        }
+        
         updateTable(list);
     }
 
@@ -324,6 +374,21 @@ public class SchedulePanel extends JPanel {
         ClassItem selectedClass = (ClassItem) filterClassCombo.getSelectedItem();
         RoomItem selectedRoom = (RoomItem) filterRoomCombo.getSelectedItem();
         TeacherItem selectedTeacher = (TeacherItem) filterTeacherCombo.getSelectedItem();
+
+        // Lọc danh sách gốc dựa trên quyền là Học viên (Student)
+        Long currentStudentId = UserSession.getStudentId();
+        if (currentStudentId != null) {
+             try {
+                 List<Enrollment> enrollments = enrollmentService.getEnrollmentsByStudentId(currentStudentId);
+                 List<Long> enrolledClassIds = enrollments.stream()
+                     .map(e -> e.getAcademicClass().getClassId())
+                     .collect(Collectors.toList());
+                 
+                 list = list.stream()
+                     .filter(s -> s.getAcademicClass() != null && enrolledClassIds.contains(s.getAcademicClass().getClassId()))
+                     .collect(Collectors.toList());
+             } catch (Exception e) {}
+        }
 
         List<Schedule> filteredList = list.stream().filter(s -> {
             boolean matchClass = selectedClass == null || selectedClass.getAcademicClass() == null ||
