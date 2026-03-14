@@ -53,7 +53,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     public long countActiveTeachers() {
         return repo.findAll().stream()
-                .filter(t -> "Active".equals(t.getStatus()))
+                .filter(t -> t.getStatus() == Status.Active)
                 .count();
     }
 

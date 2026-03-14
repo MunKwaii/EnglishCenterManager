@@ -51,7 +51,7 @@ public class TeacherRepositoryImpl implements TeacherRepository {
         try {
             return txManager.runInTransaction(em -> {
                 // Dùng JPQL để truy vấn tất cả teacher
-                String jpql = "SELECT t FROM Teacher t WHERE t.status = 'Active'";
+                String jpql = "SELECT t FROM Teacher t";
                 return em.createQuery(jpql, Teacher.class).getResultList();
             });
         } catch (Exception e) {

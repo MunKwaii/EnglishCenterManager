@@ -18,6 +18,7 @@ public class TeacherPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JTextField txtId, txtName, txtPhone, txtEmail, txtSpecialty, txtSearch;
     private JComboBox<Status> cbStatus;
+    private JComboBox<String> cbFilterStatus;
     private JButton btnAdd, btnUpdate, btnDelete, btnSearch, btnRefresh;
 
     public TeacherPanel() {
@@ -29,7 +30,7 @@ public class TeacherPanel extends JPanel {
         add(createTablePanel(), BorderLayout.CENTER);
         add(createButtonPanel(), BorderLayout.SOUTH);
 
-        loadDataToTable(teacherService.getAllTeachers());
+        loadDataToTable(fetchFilteredTeachers());
     }
 
     private JPanel createFormPanel() {
@@ -97,6 +98,11 @@ public class TeacherPanel extends JPanel {
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         txtSearch = new JTextField(15);
         btnSearch = new JButton("Tìm chuyên môn");
+        
+        cbFilterStatus = new JComboBox<>(new String[]{"Tất cả", "Đang hoạt động", "Ngừng hoạt động"});
+        searchPanel.add(new JLabel("Trạng thái:"));
+        searchPanel.add(cbFilterStatus);
+        
         searchPanel.add(txtSearch); searchPanel.add(btnSearch);
 
         // Các nút chức năng bên phải
@@ -141,6 +147,12 @@ public class TeacherPanel extends JPanel {
             }
         });
 
+        // Lọc theo trạng thái
+        cbFilterStatus.addActionListener(e -> {
+            txtSearch.setText("");
+            loadDataToTable(fetchFilteredTeachers());
+        });
+
         // Tìm kiếm sử dụng Lambda
         btnSearch.addActionListener(e -> {
             String keyword = txtSearch.getText();
@@ -148,6 +160,19 @@ public class TeacherPanel extends JPanel {
         });
 
         btnRefresh.addActionListener(e -> refreshUI());
+    }
+
+    private List<Teacher> fetchFilteredTeachers() {
+        String filterType = (String) cbFilterStatus.getSelectedItem();
+        List<Teacher> allTeachers = teacherService.getAllTeachers();
+        
+        if ("Đang hoạt động".equals(filterType)) {
+            return allTeachers.stream().filter(t -> t.getStatus() == Status.Active).toList();
+        } else if ("Ngừng hoạt động".equals(filterType)) {
+            return allTeachers.stream().filter(t -> t.getStatus() == Status.Inactive).toList();
+        } else {
+            return allTeachers;
+        }
     }
 
     private void handleAddUpdate(Long id) {
@@ -187,6 +212,7 @@ public class TeacherPanel extends JPanel {
         txtId.setText(""); txtName.setText(""); txtPhone.setText("");
         txtEmail.setText(""); txtSpecialty.setText(""); txtSearch.setText("");
         cbStatus.setSelectedIndex(0);
-        loadDataToTable(teacherService.getAllTeachers());
+        cbFilterStatus.setSelectedIndex(0);
+        loadDataToTable(fetchFilteredTeachers());
     }
 }
