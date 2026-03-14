@@ -28,6 +28,13 @@ public class StaffRepositoryImpl implements StaffRepository {
     }
 
     @Override
+    public List<Staff> findAll() throws Exception {
+        return tx.runInTransaction(em -> 
+            em.createQuery("SELECT s FROM Staff s", Staff.class).getResultList()
+        );
+    }
+
+    @Override
     public Staff findById(Long id) throws Exception {
         return tx.runInTransaction(em -> em.find(Staff.class, id));
     }

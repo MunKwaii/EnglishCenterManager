@@ -66,8 +66,13 @@ public class UserAccountRepositoryImpl implements UserAccountRepository {
     @Override
     public List<UserAccount> findAll() {
         try {
-            return txManager.runInTransaction(em ->
-                    em.createQuery("SELECT u FROM UserAccount u", UserAccount.class).getResultList());
+            return txManager.runInTransaction(em -> {
+                String jpql = "SELECT u FROM UserAccount u " +
+                        "LEFT JOIN FETCH u.teacher " +
+                        "LEFT JOIN FETCH u.student " +
+                        "LEFT JOIN FETCH u.staff";
+                return em.createQuery(jpql, UserAccount.class).getResultList();
+            });
         } catch (Exception e) {
             return Collections.emptyList();
         }

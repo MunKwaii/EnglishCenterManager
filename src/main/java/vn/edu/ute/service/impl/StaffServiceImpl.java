@@ -19,4 +19,9 @@ public class StaffServiceImpl implements StaffService {
     public List<Staff> getActiveStaffs() throws Exception {
         return staffRepo.findAllActive();
     }
+
+    @Override
+    public List<Staff> getAllStaffs() throws Exception {
+        return staffRepo.findAll();
+    }
 }

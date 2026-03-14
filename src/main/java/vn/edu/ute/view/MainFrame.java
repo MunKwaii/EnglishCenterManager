@@ -8,6 +8,19 @@ import java.util.Map;
 import vn.edu.ute.util.UserSession;
 import vn.edu.ute.model.UserAccount;
 import vn.edu.ute.util.MenuConstants;
+import vn.edu.ute.view.TeacherPanel;
+import vn.edu.ute.view.StudentPanel;
+import vn.edu.ute.view.TeacherDashboardPanel;
+import vn.edu.ute.view.StudentDashboardPanel;
+import vn.edu.ute.view.ClassPanel;
+import vn.edu.ute.view.CoursePanel;
+import vn.edu.ute.view.FinancePanel;
+import vn.edu.ute.view.NotificationPanel;
+import vn.edu.ute.view.SchedulePanel;
+import vn.edu.ute.view.AccountPanel;
+import vn.edu.ute.view.BranchPanel;
+import vn.edu.ute.view.RoomPanel;
+import vn.edu.ute.view.LoginFrame;
 
 public class MainFrame extends JFrame {
 
@@ -138,14 +151,14 @@ public class MainFrame extends JFrame {
                 } else if (currentUser.getRole() == vn.edu.ute.model.enums.UserRole.Student) {
                     return new StudentDashboardPanel();
                 }
-                return new ClassPanel();            // TODO: Bổ sung các Panel còn lại khi ráp UI
-            // case MenuConstants.MODULE_COURSE: return new CoursePanel();
-            // case MenuConstants.MODULE_FINANCE: return new FinancePanel();
+                return new ClassPanel();
+            case MenuConstants.MODULE_COURSE: return new CoursePanel();
+            case MenuConstants.MODULE_FINANCE: return new FinancePanel();
             case MenuConstants.MODULE_NOTIFICATION: return new NotificationPanel(currentUser);
-            // case MenuConstants.MODULE_SCHEDULE: return new SchedulePanel();
-            // case MenuConstants.MODULE_ACCOUNT: return new AccountPanel();
-            // case MenuConstants.MODULE_BRANCH: return new BranchPanel();
-            // case MenuConstants.MODULE_ROOM: return new RoomPanel();
+            case MenuConstants.MODULE_SCHEDULE: return new SchedulePanel();
+            case MenuConstants.MODULE_ACCOUNT: return new AccountPanel();
+            case MenuConstants.MODULE_BRANCH: return new BranchPanel();
+            case MenuConstants.MODULE_ROOM: return new RoomPanel();
             default: return null;
         }
     }
