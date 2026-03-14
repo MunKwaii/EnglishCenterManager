@@ -19,4 +19,6 @@ public interface AcademicClassService {
     List<AcademicClass> getClassesByStatus(ClassStatus status);
 
     List<AcademicClass> getClassesByCourse(Long courseId);
+
+    List<AcademicClass> getClassesByTeacher(Long teacherId);
 }

@@ -132,8 +132,13 @@ public class MainFrame extends JFrame {
         switch (moduleName) {
             case MenuConstants.MODULE_TEACHER: return new TeacherPanel();
             case MenuConstants.MODULE_STUDENT: return new StudentPanel();
-            case MenuConstants.MODULE_CLASS: return new ClassPanel();
-            // TODO: Bổ sung các Panel còn lại khi ráp UI
+            case MenuConstants.MODULE_CLASS: 
+                if (currentUser.getRole() == vn.edu.ute.model.enums.UserRole.Teacher) {
+                    return new TeacherDashboardPanel();
+                } else if (currentUser.getRole() == vn.edu.ute.model.enums.UserRole.Student) {
+                    return new StudentDashboardPanel();
+                }
+                return new ClassPanel();            // TODO: Bổ sung các Panel còn lại khi ráp UI
             // case MenuConstants.MODULE_COURSE: return new CoursePanel();
             // case MenuConstants.MODULE_FINANCE: return new FinancePanel();
             case MenuConstants.MODULE_NOTIFICATION: return new NotificationPanel(currentUser);

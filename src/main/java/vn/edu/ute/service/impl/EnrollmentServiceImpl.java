@@ -61,4 +61,9 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     public List<Enrollment> getEnrollmentsByClassId(Long classId) throws Exception {
         return enrollmentRepo.getEnrollmentsByClassId(classId);
     }
+
+    @Override
+    public List<Enrollment> getEnrollmentsByStudentId(Long studentId) throws Exception {
+        return enrollmentRepo.getEnrollmentsByStudentId(studentId);
+    }
 }

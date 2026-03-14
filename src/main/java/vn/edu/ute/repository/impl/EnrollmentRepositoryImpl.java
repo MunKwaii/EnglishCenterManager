@@ -40,6 +40,22 @@ public class EnrollmentRepositoryImpl implements EnrollmentRepository {
     }
 
     @Override
+    public List<Enrollment> getEnrollmentsByStudentId(Long studentId) throws Exception {
+        return tx.runInTransaction(em -> 
+            em.createQuery(
+                "SELECT e FROM Enrollment e " +
+                "JOIN FETCH e.student " + 
+                "JOIN FETCH e.academicClass cls " + 
+                "LEFT JOIN FETCH cls.course " +
+                "LEFT JOIN FETCH cls.room " +
+                "LEFT JOIN FETCH cls.teacher " +
+                "WHERE e.student.studentId = :studentId", Enrollment.class)
+              .setParameter("studentId", studentId)
+              .getResultList()
+        );
+    }
+
+    @Override
     public List<Enrollment> getAllEnrollments() throws Exception {
         return tx.runInTransaction(em -> 
             em.createQuery(

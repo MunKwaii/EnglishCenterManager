@@ -12,4 +12,6 @@ public interface EnrollmentService {
     
     // Hàm lấy danh sách sinh viên theo lớp đã làm trước đó
     List<Enrollment> getEnrollmentsByClassId(Long classId) throws Exception;
+
+    List<Enrollment> getEnrollmentsByStudentId(Long studentId) throws Exception;
 }

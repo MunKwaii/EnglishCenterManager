@@ -8,5 +8,8 @@ public interface EnrollmentRepository {
     Long countActiveStudentsInClass(Long classId) throws Exception;
 
     List<Enrollment> getEnrollmentsByClassId(Long classId) throws Exception;
+    
+    List<Enrollment> getEnrollmentsByStudentId(Long studentId) throws Exception;
+
     List<Enrollment> getAllEnrollments() throws Exception;
 }
