@@ -35,6 +35,16 @@ public class FinanceRepositoryImpl implements FinanceRepository {
     }
 
     @Override
+    public List<Invoice> getInvoicesByStudentId(Long studentId) throws Exception {
+        return tx.runInTransaction(em -> em
+                .createQuery(
+                        "SELECT i FROM Invoice i WHERE i.student.studentId = :id ORDER BY i.issueDate DESC",
+                        Invoice.class)
+                .setParameter("id", studentId)
+                .getResultList());
+    }
+
+    @Override
     public Payment savePayment(Payment payment) throws Exception {
         return tx.runInTransaction(em -> {
             if (payment.getPaymentId() == null) {

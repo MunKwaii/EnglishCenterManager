@@ -26,6 +26,11 @@ public class FinanceServiceImpl implements FinanceService {
     }
 
     @Override
+    public List<Invoice> getInvoicesByStudentId(Long studentId) throws Exception {
+        return financeRepo.getInvoicesByStudentId(studentId);
+    }
+
+    @Override
     public List<Payment> getAllPayments() throws Exception {
         return financeRepo.getAllPayments();
     }

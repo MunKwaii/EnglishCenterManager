@@ -39,11 +39,34 @@ public class StudentDashboardPanel extends JPanel {
         lblWelcome.setForeground(new Color(44, 62, 80));
         pnlWelcome.add(lblWelcome, BorderLayout.WEST);
 
-        // Nút hoặc text hiển thị trạng thái Học phí (có thể thêm sau ở Phase 3.2)
-        JLabel lblFeeStatus = new JLabel("Trạng thái Học phí: Hoàn tất");
-        lblFeeStatus.setForeground(new Color(39, 174, 96));
-        lblFeeStatus.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        pnlWelcome.add(lblFeeStatus, BorderLayout.EAST);
+        // Nút xem tiến độ
+        JButton btnProgress = new JButton("Xem Tiến độ học tập");
+        btnProgress.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnProgress.setBackground(new Color(142, 68, 173));
+        btnProgress.setForeground(Color.WHITE);
+        btnProgress.setFocusPainted(false);
+        btnProgress.addActionListener(e -> {
+            StudentProgressDialog progressDialog = new StudentProgressDialog(SwingUtilities.getWindowAncestor(this));
+            progressDialog.setVisible(true);
+        });
+
+        // Nút xem chi tiết học phí
+        JButton btnFee = new JButton("Xem thông tin Học phí");
+        btnFee.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnFee.setBackground(new Color(39, 174, 96));
+        btnFee.setForeground(Color.WHITE);
+        btnFee.setFocusPainted(false);
+        btnFee.addActionListener(e -> {
+            StudentFeeDialog feeDialog = new StudentFeeDialog(SwingUtilities.getWindowAncestor(this));
+            feeDialog.setVisible(true);
+        });
+
+        JPanel pnlRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        pnlRight.setOpaque(false);
+        pnlRight.add(btnProgress);
+        pnlRight.add(btnFee);
+
+        pnlWelcome.add(pnlRight, BorderLayout.EAST);
 
         return pnlWelcome;
     }
@@ -132,8 +155,11 @@ public class StudentDashboardPanel extends JPanel {
         btnViewScore.setForeground(Color.WHITE);
         btnViewScore.setFocusPainted(false);
 
-        // TODO: Gắn sự kiện chuyển trang
-        btnViewScore.addActionListener(e -> JOptionPane.showMessageDialog(this, "Tính năng Xem bảng điểm môn " + cls.getClassName() + " chưa được mở."));
+        // Mở dialog Xem bảng điểm
+        btnViewScore.addActionListener(e -> {
+            StudentResultDialog dialog = new StudentResultDialog(SwingUtilities.getWindowAncestor(this), cls);
+            dialog.setVisible(true);
+        });
 
         pnlActions.add(btnViewScore);
         card.add(pnlActions, BorderLayout.SOUTH);

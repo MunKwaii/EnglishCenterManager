@@ -8,6 +8,7 @@ public interface FinanceRepository {
     Invoice saveInvoice(Invoice invoice) throws Exception;
     Invoice getInvoiceById(Long invoiceId) throws Exception;
     List<Invoice> getUnpaidInvoices() throws Exception;
+    List<Invoice> getInvoicesByStudentId(Long studentId) throws Exception;
     
     Payment savePayment(Payment payment) throws Exception;
     List<Payment> getPaymentsByInvoiceId(Long invoiceId) throws Exception;

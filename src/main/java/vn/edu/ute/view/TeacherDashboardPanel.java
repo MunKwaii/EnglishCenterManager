@@ -122,9 +122,17 @@ public class TeacherDashboardPanel extends JPanel {
         btnScore.setForeground(Color.WHITE);
         btnScore.setFocusPainted(false);
 
-        // TODO: Gắn sự kiện chuyển trang cho các nút tương ứng (Phase 3.2)
-        btnAttendance.addActionListener(e -> JOptionPane.showMessageDialog(this, "Mở form Điểm danh lớp " + cls.getClassName()));
-        btnScore.addActionListener(e -> JOptionPane.showMessageDialog(this, "Mở form Nhập điểm lớp " + cls.getClassName()));
+        // Mở dialog Điểm danh
+        btnAttendance.addActionListener(e -> {
+            TeacherAttendanceDialog dialog = new TeacherAttendanceDialog(SwingUtilities.getWindowAncestor(this), cls);
+            dialog.setVisible(true);
+        });
+        
+        // Mở dialog Nhập điểm
+        btnScore.addActionListener(e -> {
+            TeacherGradingDialog dialog = new TeacherGradingDialog(SwingUtilities.getWindowAncestor(this), cls);
+            dialog.setVisible(true);
+        });
 
         pnlActions.add(btnAttendance);
         pnlActions.add(btnScore);

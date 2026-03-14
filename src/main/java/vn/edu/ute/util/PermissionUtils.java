@@ -71,4 +71,20 @@ public class PermissionUtils {
         if (user == null) return false;
         return user.getRole() == UserRole.Admin;
     }
+
+    /**
+     * Kiểm tra user có quyền điểm danh / nhập điểm lớp cụ thể không
+     * Admin luôn true. Teacher phải là giáo viên của lớp đó.
+     */
+    public static boolean canTakeAttendance(UserAccount user, vn.edu.ute.model.AcademicClass academicClass) {
+        if (user == null || academicClass == null) return false;
+        if (user.getRole() == UserRole.Admin) return true;
+        
+        if (user.getRole() == UserRole.Teacher && user.getTeacher() != null) {
+            if (academicClass.getTeacher() != null) {
+                return user.getTeacher().getTeacherId().equals(academicClass.getTeacher().getTeacherId());
+            }
+        }
+        return false;
+    }
 }
