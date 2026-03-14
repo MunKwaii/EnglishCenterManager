@@ -2,20 +2,25 @@ package vn.edu.ute.view;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
+
 import vn.edu.ute.util.UserSession;
-import vn.edu.ute.util.PermissionUtils;
 import vn.edu.ute.model.UserAccount;
+import vn.edu.ute.util.MenuConstants;
 
 public class MainFrame extends JFrame {
 
     private JPanel pnlContent;
+    private CardLayout cardLayout;
     private JLabel lblStatus;
+    private UserAccount currentUser;
 
-    // Khai báo các nút làm biến toàn cục của class để phân quyền
-    private JButton btnTeacher, btnStudent, btnClass, btnNotification, btnAccount;
+    // Map để lưu trữ các Panel đã được khởi tạo (Lazy Load)
+    private Map<String, JPanel> initializedPanels = new HashMap<>();
 
     public MainFrame() {
-        UserAccount currentUser = UserSession.getCurrentUser();
+        currentUser = UserSession.getCurrentUser();
 
         setTitle("Hệ thống Quản lý MIS - Center");
         setSize(1200, 800);
@@ -33,32 +38,32 @@ public class MainFrame extends JFrame {
         lblBrand.setForeground(Color.WHITE);
         lblBrand.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblBrand.setBorder(BorderFactory.createEmptyBorder(30, 20, 30, 20));
+        lblBrand.setAlignmentX(Component.CENTER_ALIGNMENT);
         pnlSidebar.add(lblBrand);
+        pnlSidebar.add(Box.createVerticalStrut(20));
 
-        // Khởi tạo các nút
-        btnTeacher = addMenuButton(pnlSidebar, "Quản lý Giáo viên", e -> showPanel(new TeacherPanel()));
-        btnStudent = addMenuButton(pnlSidebar, "Quản lý Học viên", e -> showPanel(new StudentPanel()));
-        btnClass = addMenuButton(pnlSidebar, "Quản lý Lớp học", e -> showPanel(new ClassPanel()));
-        btnNotification = addMenuButton(pnlSidebar, "Thông báo hệ thống",
-                e -> showPanel(new NotificationPanel(currentUser))); // Truyền currentUser vào
+        // --- 2. CONTENT AREA (CardLayout) ---
+        cardLayout = new CardLayout();
+        pnlContent = new JPanel(cardLayout);
+        pnlContent.setBackground(Color.WHITE);
 
-        // GỌI PHÂN QUYỀN TẠI ĐÂY
-        PermissionUtils.applyMenuPermissions(currentUser.getRole(), btnTeacher, btnStudent, btnClass, null);
+        // Card Mặc định (Home)
+        JPanel pnlHome = new JPanel(new BorderLayout());
+        pnlHome.setBackground(Color.WHITE);
+        JLabel lblWelcome = new JLabel("CHÀO MỪNG TRỞ LẠI, " + currentUser.getUsername().toUpperCase(), SwingConstants.CENTER);
+        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        pnlHome.add(lblWelcome, BorderLayout.CENTER);
+        pnlContent.add(pnlHome, "Home");
+        add(pnlContent, BorderLayout.CENTER);
+
+        // --- TẠO MENU ĐỘNG DỰA TRÊN QUYỀN ---
+        buildDynamicSidebar(pnlSidebar);
 
         pnlSidebar.add(Box.createVerticalGlue());
         addMenuButton(pnlSidebar, "Đăng xuất", e -> handleLogout());
-
         add(pnlSidebar, BorderLayout.WEST);
 
-        // --- 2. CONTENT AREA --- (Giữ nguyên phần cũ của ông)
-        pnlContent = new JPanel(new BorderLayout());
-        pnlContent.setBackground(Color.WHITE);
-        JLabel lblWelcome = new JLabel("CHÀO MỪNG TRỞ LẠI, " + currentUser.getUsername().toUpperCase(), SwingConstants.CENTER);
-        lblWelcome.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        pnlContent.add(lblWelcome, BorderLayout.CENTER);
-        add(pnlContent, BorderLayout.CENTER);
-
-        // --- 3. STATUS BAR --- (Giữ nguyên phần cũ của ông)
+        // --- 3. STATUS BAR ---
         JPanel pnlStatus = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         pnlStatus.setBackground(new Color(236, 240, 241));
         lblStatus = new JLabel("Đang đăng nhập: " + currentUser.getUsername() + " | Quyền hạn: " + currentUser.getRole());
@@ -67,7 +72,30 @@ public class MainFrame extends JFrame {
         add(pnlStatus, BorderLayout.SOUTH);
     }
 
-    // Sửa lại hàm này để nó trả về JButton
+    /**
+     * Sinh các nút Sidebar dựa trên MenuConstants
+     */
+    private void buildDynamicSidebar(JPanel pnlSidebar) {
+        String[] allModules = {
+                MenuConstants.MODULE_TEACHER,
+                MenuConstants.MODULE_STUDENT,
+                MenuConstants.MODULE_CLASS,
+                MenuConstants.MODULE_COURSE,
+                MenuConstants.MODULE_FINANCE,
+                MenuConstants.MODULE_SCHEDULE,
+                MenuConstants.MODULE_NOTIFICATION,
+                MenuConstants.MODULE_ACCOUNT,
+                MenuConstants.MODULE_BRANCH,
+                MenuConstants.MODULE_ROOM
+        };
+
+        for (String module : allModules) {
+            if (MenuConstants.isModuleAllowed(module, currentUser.getRole())) {
+                addMenuButton(pnlSidebar, module, e -> handleMenuClick(module));
+            }
+        }
+    }
+
     private JButton addMenuButton(JPanel sidebar, String text, java.awt.event.ActionListener action) {
         JButton btn = new JButton(text);
         btn.setMaximumSize(new Dimension(250, 50));
@@ -83,11 +111,38 @@ public class MainFrame extends JFrame {
         return btn;
     }
 
-    private void showPanel(JPanel panel) {
-        pnlContent.removeAll();
-        pnlContent.add(panel, BorderLayout.CENTER);
-        pnlContent.revalidate();
-        pnlContent.repaint();
+    /**
+     * Logic Lazy Load: Chỉ khởi tạo Panel khi người dùng click vào
+     */
+    private void handleMenuClick(String moduleName) {
+        if (!initializedPanels.containsKey(moduleName)) {
+            JPanel newPanel = createPanelForModule(moduleName);
+            if (newPanel != null) {
+                pnlContent.add(newPanel, moduleName);
+                initializedPanels.put(moduleName, newPanel);
+            } else {
+                JOptionPane.showMessageDialog(this, "Module " + moduleName + " đang được phát triển!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+        }
+        cardLayout.show(pnlContent, moduleName);
+    }
+
+    private JPanel createPanelForModule(String moduleName) {
+        switch (moduleName) {
+            case MenuConstants.MODULE_TEACHER: return new TeacherPanel();
+            case MenuConstants.MODULE_STUDENT: return new StudentPanel();
+            case MenuConstants.MODULE_CLASS: return new ClassPanel();
+            // TODO: Bổ sung các Panel còn lại khi ráp UI
+            // case MenuConstants.MODULE_COURSE: return new CoursePanel();
+            // case MenuConstants.MODULE_FINANCE: return new FinancePanel();
+            case MenuConstants.MODULE_NOTIFICATION: return new NotificationPanel(currentUser);
+            // case MenuConstants.MODULE_SCHEDULE: return new SchedulePanel();
+            // case MenuConstants.MODULE_ACCOUNT: return new AccountPanel();
+            // case MenuConstants.MODULE_BRANCH: return new BranchPanel();
+            // case MenuConstants.MODULE_ROOM: return new RoomPanel();
+            default: return null;
+        }
     }
 
     private void handleLogout() {

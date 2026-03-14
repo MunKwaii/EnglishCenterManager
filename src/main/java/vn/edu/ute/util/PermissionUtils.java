@@ -7,36 +7,7 @@ import vn.edu.ute.model.enums.UserRole;
 
 public class PermissionUtils {
 
-    /**
-     * Hàm kiểm tra và ẩn/hiện các nút trên Sidebar dựa vào Role
-     * @param role Quyền hiện tại
-     * @param btnTeacher Nút menu Giáo viên
-     * @param btnStudent Nút menu Sinh viên
-     * @param btnClass Nút menu Lớp học
-     * @param btnAccount Nút menu Tài khoản
-     */
-    public static void applyMenuPermissions(UserRole role, JButton btnTeacher, JButton btnStudent, JButton btnClass, JButton btnAccount) {
-        // Mặc định Admin thấy hết, nên ta chỉ xử lý các Role thấp hơn
-        if (role == UserRole.Admin) return;
-
-        // 1. Nếu là Student: Ẩn gần như hết, chỉ để lại Lớp học và Thông báo (nếu có)
-        if (role == UserRole.Student) {
-            btnTeacher.setVisible(false);
-            btnStudent.setVisible(false);
-            if (btnAccount != null) btnAccount.setVisible(false);
-        }
-
-        // 2. Nếu là Teacher: Không cho quản lý giáo viên khác và tài khoản
-        if (role == UserRole.Teacher) {
-            btnTeacher.setVisible(false);
-            if (btnAccount != null) btnAccount.setVisible(false);
-        }
-
-        // 3. Nếu là Staff (Nhân viên): Có thể cho xem mọi thứ trừ Tài khoản hệ thống
-        if (role == UserRole.Staff) {
-            if (btnAccount != null) btnAccount.setVisible(false);
-        }
-    }
+    // Hàm applyMenuPermissions đã bị xóa do áp dụng Dynamic Sidebar
 
     /**
      * Kiểm tra user có quyền GỬI/SỬA/XÓA thông báo không
@@ -67,5 +38,37 @@ public class PermissionUtils {
     public static boolean canViewAllNotifications(UserAccount user) {
         if (user == null) return false;
         return user.getRole() == UserRole.Admin || user.getRole() == UserRole.Staff;
+    }
+
+    /**
+     * Kiểm tra user có quyền SỬA ĐIỂM không
+     * Admin và Teacher được phép
+     */
+    public static boolean canEditScore(UserAccount user) {
+        if (user == null) return false;
+        return user.getRole() == UserRole.Admin || user.getRole() == UserRole.Teacher;
+    }
+
+    /**
+     * Kiểm tra user có quyền XÓA HÓA ĐƠN không
+     * Chỉ Admin (UserRole) và Staff có role Accountant/Admin/Manager được phép
+     */
+    public static boolean canDeleteInvoice(UserAccount user) {
+        if (user == null) return false;
+        if (user.getRole() == UserRole.Admin) return true;
+        if (user.getRole() == UserRole.Staff && user.getStaff() != null) {
+            StaffRole role = user.getStaff().getRole();
+            return role == StaffRole.Admin || role == StaffRole.Manager || role == StaffRole.Accountant;
+        }
+        return false;
+    }
+
+    /**
+     * Kiểm tra user có quyền QUẢN LÝ HỆ THỐNG (Account, Branch...) không
+     * Chỉ duy nhất Admin được phép
+     */
+    public static boolean canManageSystem(UserAccount user) {
+        if (user == null) return false;
+        return user.getRole() == UserRole.Admin;
     }
 }
