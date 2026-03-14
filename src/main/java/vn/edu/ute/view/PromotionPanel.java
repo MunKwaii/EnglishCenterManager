@@ -68,12 +68,21 @@ public class PromotionPanel extends JPanel {
 
         // Tách riêng cụm nút bấm xuống dưới cùng, căn phải
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        JButton btnSave = new JButton("Lưu Khuyến mãi");
-        btnSave.addActionListener(e -> savePromo());
+        JButton btnAdd = new JButton("Thêm mới");
+        btnAdd.addActionListener(e -> savePromo(null));
+        JButton btnUpdate = new JButton("Cập nhật");
+        btnUpdate.addActionListener(e -> {
+            if (txtId.getText().isEmpty()) return;
+            savePromo(Long.parseLong(txtId.getText()));
+        });
+        JButton btnDelete = new JButton("Xóa");
+        btnDelete.addActionListener(e -> deletePromo());
         JButton btnClear = new JButton("Làm mới");
         btnClear.addActionListener(e -> clearForm());
         
-        btnPanel.add(btnSave); 
+        btnPanel.add(btnAdd);
+        btnPanel.add(btnUpdate);
+        btnPanel.add(btnDelete);
         btnPanel.add(btnClear);
 
         container.add(form, BorderLayout.CENTER);
@@ -104,9 +113,8 @@ public class PromotionPanel extends JPanel {
         return panel;
     }
 
-    private void savePromo() {
+    private void savePromo(Long id) {
         try {
-            Long id = txtId.getText().isEmpty() ? null : Long.parseLong(txtId.getText());
             Promotion p = Promotion.builder()
                     .promotionId(id)
                     .promoName(txtName.getText())
@@ -117,9 +125,25 @@ public class PromotionPanel extends JPanel {
                     .status((Status) cbStatus.getSelectedItem())
                     .build();
             promoService.savePromotion(p);
-            JOptionPane.showMessageDialog(this, "Lưu thành công!");
+            JOptionPane.showMessageDialog(this, "Thành công!");
             clearForm(); loadData();
         } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage()); }
+    }
+
+    private void deletePromo() {
+        if (txtId.getText().isEmpty()) return;
+        try {
+            Long id = Long.parseLong(txtId.getText());
+            boolean ok = promoService.deletePromotion(id);
+            if (ok) {
+                JOptionPane.showMessageDialog(this, "Xóa thành công!");
+                clearForm(); loadData();
+            } else {
+                JOptionPane.showMessageDialog(this, "Không thể xóa khuyến mãi này!");
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi xóa!");
+        }
     }
 
     private void clearForm() {

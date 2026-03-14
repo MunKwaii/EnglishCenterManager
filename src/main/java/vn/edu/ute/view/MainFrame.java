@@ -20,6 +20,7 @@ import vn.edu.ute.view.SchedulePanel;
 import vn.edu.ute.view.AccountPanel;
 import vn.edu.ute.view.BranchPanel;
 import vn.edu.ute.view.RoomPanel;
+import vn.edu.ute.view.PromotionPanel;
 import vn.edu.ute.view.LoginFrame;
 
 public class MainFrame extends JFrame {
@@ -99,7 +100,8 @@ public class MainFrame extends JFrame {
                 MenuConstants.MODULE_NOTIFICATION,
                 MenuConstants.MODULE_ACCOUNT,
                 MenuConstants.MODULE_BRANCH,
-                MenuConstants.MODULE_ROOM
+                MenuConstants.MODULE_ROOM,
+                MenuConstants.MODULE_PROMOTION
         };
 
         for (String module : allModules) {
@@ -159,6 +161,7 @@ public class MainFrame extends JFrame {
             case MenuConstants.MODULE_ACCOUNT: return new AccountPanel();
             case MenuConstants.MODULE_BRANCH: return new BranchPanel();
             case MenuConstants.MODULE_ROOM: return new RoomPanel();
+            case MenuConstants.MODULE_PROMOTION: return new PromotionPanel();
             default: return null;
         }
     }
