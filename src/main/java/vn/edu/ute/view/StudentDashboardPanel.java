@@ -3,8 +3,11 @@ package vn.edu.ute.view;
 import vn.edu.ute.model.AcademicClass;
 import vn.edu.ute.model.Enrollment;
 import vn.edu.ute.service.EnrollmentService;
+import vn.edu.ute.service.CertificateService;
 import vn.edu.ute.service.impl.EnrollmentServiceImpl;
+import vn.edu.ute.service.impl.CertificateServiceImpl;
 import vn.edu.ute.util.UserSession;
+import vn.edu.ute.model.Certificate;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -14,6 +17,7 @@ import java.util.List;
 public class StudentDashboardPanel extends JPanel {
 
     private final EnrollmentService enrollmentService = new EnrollmentServiceImpl();
+    private final CertificateService certificateService = new CertificateServiceImpl();
     private JPanel pnlClassCards;
 
     public StudentDashboardPanel() {
@@ -162,6 +166,21 @@ public class StudentDashboardPanel extends JPanel {
         });
 
         pnlActions.add(btnViewScore);
+
+        // Nút xem chứng nhận (chỉ hiện khi đã có chứng nhận)
+        Certificate cert = certificateService.getCertificateByStudentIdAndClassId(enr.getStudent().getStudentId(), cls.getClassId());
+        if (cert != null) {
+            JButton btnCert = new JButton("Xem chứng nhận");
+            btnCert.setBackground(new Color(241, 196, 15));
+            btnCert.setForeground(Color.BLACK);
+            btnCert.setFocusPainted(false);
+            btnCert.addActionListener(e -> {
+                StudentCertificateDialog dialog = new StudentCertificateDialog(SwingUtilities.getWindowAncestor(this), cert);
+                dialog.setVisible(true);
+            });
+            pnlActions.add(btnCert);
+        }
+
         card.add(pnlActions, BorderLayout.SOUTH);
 
         return card;

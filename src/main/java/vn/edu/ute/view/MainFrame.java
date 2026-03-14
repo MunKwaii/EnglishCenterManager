@@ -23,6 +23,8 @@ import vn.edu.ute.view.RoomPanel;
 import vn.edu.ute.view.PromotionPanel;
 import vn.edu.ute.view.PlacementTestPanel;
 import vn.edu.ute.view.EnrollmentPanel;
+import vn.edu.ute.view.ResultPanel;
+import vn.edu.ute.view.CertificatePanel;
 import vn.edu.ute.view.LoginFrame;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.JScrollPane;
@@ -115,7 +117,9 @@ public class MainFrame extends JFrame {
                 MenuConstants.MODULE_ROOM,
                 MenuConstants.MODULE_PROMOTION,
                 MenuConstants.MODULE_PLACEMENT_TEST,
-                MenuConstants.MODULE_ENROLLMENT
+                MenuConstants.MODULE_ENROLLMENT,
+                MenuConstants.MODULE_RESULT,
+                MenuConstants.MODULE_CERTIFICATE
         };
 
         for (String module : allModules) {
@@ -178,6 +182,8 @@ public class MainFrame extends JFrame {
             case MenuConstants.MODULE_PROMOTION: return new PromotionPanel();
             case MenuConstants.MODULE_PLACEMENT_TEST: return new PlacementTestPanel();
             case MenuConstants.MODULE_ENROLLMENT: return new EnrollmentPanel();
+            case MenuConstants.MODULE_RESULT: return new ResultPanel();
+            case MenuConstants.MODULE_CERTIFICATE: return new CertificatePanel();
             default: return null;
         }
     }

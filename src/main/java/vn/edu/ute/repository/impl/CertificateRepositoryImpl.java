@@ -51,4 +51,23 @@ public class CertificateRepositoryImpl implements CertificateRepository {
             return Collections.emptyList();
         }
     }
+
+    @Override
+    public Certificate getCertificateByStudentIdAndClassId(Long studentId, Long classId) {
+        try {
+            return tx.runInTransaction(em -> {
+                List<Certificate> results = em.createQuery(
+                    "SELECT c FROM Certificate c JOIN FETCH c.student JOIN FETCH c.academicClass " +
+                    "LEFT JOIN FETCH c.academicClass.course " +
+                    "WHERE c.student.studentId = :studentId AND c.academicClass.classId = :classId", Certificate.class)
+                    .setParameter("studentId", studentId)
+                    .setParameter("classId", classId)
+                    .getResultList();
+                return results.isEmpty() ? null : results.get(0);
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

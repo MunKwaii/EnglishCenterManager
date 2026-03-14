@@ -23,4 +23,9 @@ public class CertificateServiceImpl implements CertificateService {
     public List<Student> getEligibleStudents(Long classId) {
         return repo.getEligibleStudentsForClass(classId);
     }
+
+    @Override
+    public Certificate getCertificateByStudentIdAndClassId(Long studentId, Long classId) {
+        return repo.getCertificateByStudentIdAndClassId(studentId, classId);
+    }
 }

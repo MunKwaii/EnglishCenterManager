@@ -7,4 +7,5 @@ public interface CertificateRepository {
     Certificate save(Certificate cert);
     List<Certificate> findAll();
     List<Student> getEligibleStudentsForClass(Long classId);
+    Certificate getCertificateByStudentIdAndClassId(Long studentId, Long classId);
 }
