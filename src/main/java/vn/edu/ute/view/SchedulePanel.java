@@ -51,6 +51,7 @@ public class SchedulePanel extends JPanel {
     private JButton btnAddSchedule;
     private JButton btnUpdateSchedule;
     private JButton btnDeleteSchedule;
+    private JButton btnRefreshSchedule;
 
     public SchedulePanel() {
         setLayout(new BorderLayout(10, 10));
@@ -124,6 +125,7 @@ public class SchedulePanel extends JPanel {
         btnAddSchedule = new JButton("Thêm");
         btnUpdateSchedule = new JButton("Cập nhật");
         btnDeleteSchedule = new JButton("Xóa");
+        btnRefreshSchedule = new JButton("Làm mới Form");
 
         btnUpdateSchedule.setEnabled(false);
         btnDeleteSchedule.setEnabled(false);
@@ -167,6 +169,7 @@ public class SchedulePanel extends JPanel {
         actionPanel.add(btnAddSchedule);
         actionPanel.add(btnUpdateSchedule);
         actionPanel.add(btnDeleteSchedule);
+        actionPanel.add(btnRefreshSchedule);
 
         gbc.gridx = 4;
         gbc.gridy = 1;
@@ -177,53 +180,56 @@ public class SchedulePanel extends JPanel {
         btnAddSchedule.addActionListener(e -> addSchedule());
         btnUpdateSchedule.addActionListener(e -> updateSchedule());
         btnDeleteSchedule.addActionListener(e -> deleteSchedule());
+        btnRefreshSchedule.addActionListener(e -> clearForm());
 
         // Table Selection Listener
-        scheduleTable.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                int row = scheduleTable.rowAtPoint(evt.getPoint());
-                if (row >= 0) {
-                    scheduleTable.setRowSelectionInterval(row, row);
-                    selectedScheduleId = (Long) tableModel.getValueAt(row, 0);
+        scheduleTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && scheduleTable.getSelectedRow() != -1) {
+                int row = scheduleTable.getSelectedRow();
+                selectedScheduleId = (Long) tableModel.getValueAt(row, 0);
 
-                    // Populate Form
-                    txtStudyDate.setText(tableModel.getValueAt(row, 1).toString());
+                // Populate Form
+                txtStudyDate.setText(tableModel.getValueAt(row, 1).toString());
 
-                    LocalTime startT = (LocalTime) tableModel.getValueAt(row, 2);
-                    LocalTime endT = (LocalTime) tableModel.getValueAt(row, 3);
+                LocalTime startT = (LocalTime) tableModel.getValueAt(row, 2);
+                LocalTime endT = (LocalTime) tableModel.getValueAt(row, 3);
 
-                    Calendar cal = Calendar.getInstance();
-                    cal.set(Calendar.HOUR_OF_DAY, startT.getHour());
-                    cal.set(Calendar.MINUTE, startT.getMinute());
-                    spinStartTime.setValue(cal.getTime());
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.HOUR_OF_DAY, startT.getHour());
+                cal.set(Calendar.MINUTE, startT.getMinute());
+                spinStartTime.setValue(cal.getTime());
 
-                    cal.set(Calendar.HOUR_OF_DAY, endT.getHour());
-                    cal.set(Calendar.MINUTE, endT.getMinute());
-                    spinEndTime.setValue(cal.getTime());
+                cal.set(Calendar.HOUR_OF_DAY, endT.getHour());
+                cal.set(Calendar.MINUTE, endT.getMinute());
+                spinEndTime.setValue(cal.getTime());
 
-                    String className = (String) tableModel.getValueAt(row, 4);
+                String className = (String) tableModel.getValueAt(row, 4);
+                if (className != null && !className.isEmpty()) {
                     for (int i = 0; i < classCombo.getItemCount(); i++) {
                         if (classCombo.getItemAt(i).toString().equals(className)) {
                             classCombo.setSelectedIndex(i);
                             break;
                         }
                     }
+                } else if (classCombo.getItemCount() > 0) {
+                    classCombo.setSelectedIndex(0);
+                }
 
-                    String roomName = (String) tableModel.getValueAt(row, 5);
+                String roomName = (String) tableModel.getValueAt(row, 5);
+                if (roomName != null && !roomName.isEmpty()) {
                     for (int i = 0; i < roomCombo.getItemCount(); i++) {
                         if (roomCombo.getItemAt(i).toString().equals(roomName)) {
                             roomCombo.setSelectedIndex(i);
                             break;
                         }
                     }
-
-                    btnUpdateSchedule.setEnabled(true);
-                    btnDeleteSchedule.setEnabled(true);
-                    btnAddSchedule.setEnabled(false);
-                } else {
-                    clearForm();
+                } else if (roomCombo.getItemCount() > 0) {
+                    roomCombo.setSelectedIndex(0);
                 }
+
+                btnUpdateSchedule.setEnabled(true);
+                btnDeleteSchedule.setEnabled(true);
+                btnAddSchedule.setEnabled(false);
             }
         });
 
