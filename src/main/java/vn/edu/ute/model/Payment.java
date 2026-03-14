@@ -38,16 +38,19 @@ public class Payment {
     private BigDecimal amount;
 
     @Column(name = "payment_date", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    @Builder.Default
     private LocalDateTime paymentDate = LocalDateTime.now();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false,
             columnDefinition = "ENUM('Cash','Bank','Momo','ZaloPay','Card','Other') DEFAULT 'Cash'")
+    @Builder.Default
     private PaymentMethod paymentMethod = PaymentMethod.Cash;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false,
             columnDefinition = "ENUM('Pending','Completed','Failed','Refunded') DEFAULT 'Completed'")
+    @Builder.Default
     private PaymentStatus status = PaymentStatus.Completed;
 
     @Column(name = "reference_code", length = 100)

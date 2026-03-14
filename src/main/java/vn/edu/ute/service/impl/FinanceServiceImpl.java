@@ -26,6 +26,11 @@ public class FinanceServiceImpl implements FinanceService {
     }
 
     @Override
+    public List<Invoice> getAllInvoices() throws Exception {
+        return financeRepo.getAllInvoices();
+    }
+
+    @Override
     public List<Invoice> getInvoicesByStudentId(Long studentId) throws Exception {
         return financeRepo.getInvoicesByStudentId(studentId);
     }
@@ -33,6 +38,11 @@ public class FinanceServiceImpl implements FinanceService {
     @Override
     public List<Payment> getAllPayments() throws Exception {
         return financeRepo.getAllPayments();
+    }
+
+    @Override
+    public List<Payment> getPaymentsByInvoiceId(Long invoiceId) throws Exception {
+        return financeRepo.getPaymentsByInvoiceId(invoiceId);
     }
 
     @Override

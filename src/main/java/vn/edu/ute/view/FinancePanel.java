@@ -25,6 +25,7 @@ public class FinancePanel extends JPanel {
     
     // UI Components
     private JTextField txtInvoiceId, txtAmount, txtRefCode, txtSearch;
+    private JComboBox<String> cbFilterStatus;
     private JComboBox<PaymentMethod> cbMethod;
     private JButton btnPay, btnExport;
     private JLabel lblStatus;
@@ -76,17 +77,39 @@ public class FinancePanel extends JPanel {
             public void changedUpdate(DocumentEvent e) { filterData(); }
         });
         
+        topPanel.add(txtSearch);
+
+        topPanel.add(new JLabel("   Trạng thái:"));
+        cbFilterStatus = new JComboBox<>(new String[]{"Chờ thanh toán", "Đã thanh toán", "Tất cả"});
+        cbFilterStatus.addActionListener(e -> {
+            txtSearch.setText("");
+            loadDataToTable();
+        });
+        topPanel.add(cbFilterStatus);
+
         btnExport = new JButton("Xuất CSV Doanh Thu");
         btnExport.addActionListener(e -> exportData());
-
-        topPanel.add(txtSearch);
+        
         topPanel.add(btnExport);
         return topPanel;
     }
 
+    private List<Invoice> fetchFilteredInvoices() throws Exception {
+        String filterType = (String) cbFilterStatus.getSelectedItem();
+        if ("Tất cả".equals(filterType)) {
+            return financeService.getAllInvoices();
+        } else if ("Đã thanh toán".equals(filterType)) {
+            return financeService.getAllInvoices().stream()
+                    .filter(i -> vn.edu.ute.model.enums.InvoiceStatus.Paid == i.getStatus())
+                    .toList();
+        } else {
+            return financeService.getUnpaidInvoices();
+        }
+    }
+
     private JPanel initTablePanel() {
         JPanel tablePanel = new JPanel(new BorderLayout());
-        tablePanel.setBorder(BorderFactory.createTitledBorder("Danh sách Hóa đơn chờ thanh toán"));
+        tablePanel.setBorder(BorderFactory.createTitledBorder("Danh sách Hóa đơn"));
 
         String[] columns = {"ID Hóa đơn", "Sinh viên", "Tổng tiền (VNĐ)", "Ngày lập", "Trạng thái"};
         tableModel = new DefaultTableModel(columns, 0) {
@@ -100,13 +123,45 @@ public class FinancePanel extends JPanel {
         invoiceTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && invoiceTable.getSelectedRow() != -1) {
                 int row = invoiceTable.getSelectedRow();
-                txtInvoiceId.setText(tableModel.getValueAt(row, 0).toString());
+                String invoiceIdStr = tableModel.getValueAt(row, 0).toString();
+                txtInvoiceId.setText(invoiceIdStr);
                 
                 // Lấy số tiền từ bảng (đã có dấu phẩy) và gán xuống Form
                 String amountStr = tableModel.getValueAt(row, 2).toString();
                 txtAmount.setText(amountStr);
                 
-                lblStatus.setText(" ");
+                vn.edu.ute.model.enums.InvoiceStatus status = (vn.edu.ute.model.enums.InvoiceStatus) tableModel.getValueAt(row, 4);
+                
+                if (status == vn.edu.ute.model.enums.InvoiceStatus.Paid) {
+                    try {
+                        Long invoiceId = Long.parseLong(invoiceIdStr);
+                        List<vn.edu.ute.model.Payment> payments = financeService.getPaymentsByInvoiceId(invoiceId);
+                        if (payments != null && !payments.isEmpty()) {
+                            vn.edu.ute.model.Payment lastPayment = payments.get(payments.size() - 1);
+                            cbMethod.setSelectedItem(lastPayment.getPaymentMethod());
+                            if (lastPayment.getReferenceCode() != null) {
+                                txtRefCode.setText(lastPayment.getReferenceCode());
+                            } else {
+                                txtRefCode.setText("");
+                            }
+                        }
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                    if (btnPay != null) btnPay.setEnabled(false);
+                    if (cbMethod != null) cbMethod.setEnabled(false);
+                    if (txtAmount != null) txtAmount.setEditable(false);
+                } else {
+                    if (cbMethod != null) {
+                        cbMethod.setSelectedIndex(0);
+                        cbMethod.setEnabled(true);
+                    }
+                    if (txtRefCode != null) txtRefCode.setText("");
+                    if (btnPay != null) btnPay.setEnabled(true);
+                    if (txtAmount != null) txtAmount.setEditable(true);
+                }
+                
+                if (lblStatus != null) lblStatus.setText(" ");
             }
         });
 
@@ -187,7 +242,7 @@ public class FinancePanel extends JPanel {
     private void loadDataToTable() {
         tableModel.setRowCount(0);
         try {
-            List<Invoice> invoices = financeService.getUnpaidInvoices();
+            List<Invoice> invoices = fetchFilteredInvoices();
             if (invoices != null) {
                 invoices.forEach(inv -> {
                     tableModel.addRow(new Object[]{
@@ -207,7 +262,7 @@ public class FinancePanel extends JPanel {
     private void filterData() {
         String keyword = txtSearch.getText().toLowerCase();
         try {
-            List<Invoice> invoices = financeService.getUnpaidInvoices();
+            List<Invoice> invoices = fetchFilteredInvoices();
             tableModel.setRowCount(0);
             invoices.stream()
                     .filter(inv -> inv.getStudent() != null && inv.getStudent().getFullName().toLowerCase().contains(keyword))

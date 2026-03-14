@@ -35,6 +35,15 @@ public class FinanceRepositoryImpl implements FinanceRepository {
     }
 
     @Override
+    public List<Invoice> getAllInvoices() throws Exception {
+        return tx.runInTransaction(em -> em
+                .createQuery(
+                        "SELECT i FROM Invoice i JOIN FETCH i.student",
+                        Invoice.class)
+                .getResultList());
+    }
+
+    @Override
     public List<Invoice> getInvoicesByStudentId(Long studentId) throws Exception {
         return tx.runInTransaction(em -> em
                 .createQuery(
