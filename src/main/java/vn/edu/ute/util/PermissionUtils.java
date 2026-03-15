@@ -1,6 +1,7 @@
 package vn.edu.ute.util;
 
 import javax.swing.*;
+import vn.edu.ute.model.AcademicClass;
 import vn.edu.ute.model.UserAccount;
 import vn.edu.ute.model.enums.StaffRole;
 import vn.edu.ute.model.enums.UserRole;
@@ -76,7 +77,7 @@ public class PermissionUtils {
      * Kiểm tra user có quyền điểm danh / nhập điểm lớp cụ thể không
      * Admin luôn true. Teacher phải là giáo viên của lớp đó.
      */
-    public static boolean canTakeAttendance(UserAccount user, vn.edu.ute.model.AcademicClass academicClass) {
+    public static boolean canTakeAttendance(UserAccount user, AcademicClass academicClass) {
         if (user == null || academicClass == null) return false;
         if (user.getRole() == UserRole.Admin) return true;
         

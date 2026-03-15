@@ -22,7 +22,9 @@ public class NotificationPanel extends JPanel {
     private JTextField txtTitle, txtSearch, txtId; // Thêm txtId để quản lý cập nhật/xóa
     private JTextArea taContent;
     private JComboBox<NotificationTargetRole> cbTargetRole;
-    private JButton btnSend, btnUpdate, btnDelete, btnSearch, btnRefresh;
+    private JComboBox<String> cbFilterRole;
+    private JButton btnSend, btnUpdate, btnDelete, btnSearch, btnRefresh, btnTop5, btnUrgent;
+    private JLabel lblStats, lblUrgentWarning;
 
     public NotificationPanel(UserAccount currentUser) {
         this.currentUser = currentUser;
@@ -38,6 +40,7 @@ public class NotificationPanel extends JPanel {
         applyPermissions();
 
         loadDataToTable(notificationService.getAllNotifications());
+        updateStats();
     }
 
     private JPanel createFormPanel() {
@@ -52,10 +55,15 @@ public class NotificationPanel extends JPanel {
         txtTitle = new JTextField();
         cbTargetRole = new JComboBox<>(NotificationTargetRole.values());
 
+        lblStats = new JLabel("Tổng thông báo: 0 | Khẩn cấp: Không");
+        lblStats.setFont(new Font("Arial", Font.BOLD, 12));
+
         taContent = new JTextArea(4, 20);
         taContent.setLineWrap(true);
         taContent.setWrapStyleWord(true);
         JScrollPane spContent = new JScrollPane(taContent);
+
+        // ...existing code...
 
         // Bố trí các thành phần
         gbc.gridx = 0; gbc.gridy = 0; formPanel.add(new JLabel("ID:"), gbc);
@@ -69,6 +77,8 @@ public class NotificationPanel extends JPanel {
 
         gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 1; gbc.weightx = 0; formPanel.add(new JLabel("Nội dung:"), gbc);
         gbc.gridx = 1; gbc.gridwidth = 3; gbc.fill = GridBagConstraints.BOTH; formPanel.add(spContent, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 4; gbc.weightx = 1.0; formPanel.add(lblStats, gbc);
 
         return formPanel;
     }
@@ -113,8 +123,13 @@ public class NotificationPanel extends JPanel {
 
         // Phần tìm kiếm bên trái
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        txtSearch = new JTextField(15);
+        txtSearch = new JTextField(12);
         btnSearch = new JButton("Tìm kiếm");
+
+        cbFilterRole = new JComboBox<>(new String[]{"Tất cả", "Student", "Teacher", "All"});
+
+        searchPanel.add(new JLabel("Lọc đối tượng:"));
+        searchPanel.add(cbFilterRole);
         searchPanel.add(new JLabel("Tìm tiêu đề:"));
         searchPanel.add(txtSearch);
         searchPanel.add(btnSearch);
@@ -124,11 +139,15 @@ public class NotificationPanel extends JPanel {
         btnSend = new JButton("Gửi mới");
         btnUpdate = new JButton("Cập nhật");
         btnDelete = new JButton("Xóa");
+        btnTop5 = new JButton("Top 5 mới nhất");
+        btnUrgent = new JButton("Thông báo khẩn cấp");
         btnRefresh = new JButton("Làm mới");
 
         buttonPanel.add(btnSend);
         buttonPanel.add(btnUpdate);
         buttonPanel.add(btnDelete);
+        buttonPanel.add(btnTop5);
+        buttonPanel.add(btnUrgent);
         buttonPanel.add(btnRefresh);
 
         actionPanel.add(searchPanel, BorderLayout.WEST);
@@ -185,7 +204,7 @@ public class NotificationPanel extends JPanel {
                         .targetRole((NotificationTargetRole) cbTargetRole.getSelectedItem())
                         .createdByUser(currentUser)
                         .build();
-                notificationService.updateNotification(n); // Gọi updateNotification() riêng biệt
+                notificationService.updateNotification(n);
                 JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
                 refreshUI();
             } catch (Exception ex) {
@@ -193,9 +212,49 @@ public class NotificationPanel extends JPanel {
             }
         });
 
-        // Tìm kiếm sử dụng Lambda từ Service
+        // Tìm kiếm theo từ khóa
         btnSearch.addActionListener(e -> {
-            loadDataToTable(notificationService.searchByKeyword(txtSearch.getText()));
+            String keyword = txtSearch.getText().trim();
+            if (keyword.isEmpty()) {
+                loadDataToTable(notificationService.getAllNotifications());
+            } else {
+                loadDataToTable(notificationService.searchByKeyword(keyword));
+            }
+        });
+
+        // Filter theo đối tượng (Role)
+        cbFilterRole.addActionListener(e -> {
+            String filterType = (String) cbFilterRole.getSelectedItem();
+            List<Notification> results;
+
+            if ("Tất cả".equals(filterType)) {
+                results = notificationService.getAllNotifications();
+            } else if ("Student".equals(filterType)) {
+                results = notificationService.getNotificationsForUser(NotificationTargetRole.Student);
+            } else if ("Teacher".equals(filterType)) {
+                results = notificationService.getNotificationsForUser(NotificationTargetRole.Teacher);
+            } else { // All
+                results = notificationService.getNotificationsForUser(NotificationTargetRole.All);
+            }
+
+            loadDataToTable(results);
+        });
+
+        // Top 5 thông báo mới nhất
+        btnTop5.addActionListener(e -> {
+            List<Notification> top5 = notificationService.getTop5LatestNotifications();
+            loadDataToTable(top5);
+            JOptionPane.showMessageDialog(this, "Đã tải 5 thông báo mới nhất");
+        });
+
+        // Kiểm tra thông báo khẩn cấp
+        btnUrgent.addActionListener(e -> {
+            boolean hasUrgent = notificationService.hasUrgentNotifications();
+            if (hasUrgent) {
+                JOptionPane.showMessageDialog(this, "CÓ thông báo KHẨN CẤP trong hệ thống!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, "Không có thông báo khẩn cấp", "Thông tin", JOptionPane.INFORMATION_MESSAGE);
+            }
         });
 
         // Làm mới
@@ -222,7 +281,22 @@ public class NotificationPanel extends JPanel {
         taContent.setText("");
         txtSearch.setText("");
         cbTargetRole.setSelectedIndex(0);
+        cbFilterRole.setSelectedIndex(0);
         loadDataToTable(notificationService.getAllNotifications());
+        updateStats();
+    }
+
+    private void updateStats() {
+        long totalCount = notificationService.getAllNotifications().size();
+        boolean hasUrgent = notificationService.hasUrgentNotifications();
+        String urgentStatus = hasUrgent ? "Có" : "Không";
+        lblStats.setText(String.format("Tổng thông báo: %d | Khẩn cấp: %s", totalCount, urgentStatus));
+
+        if (hasUrgent) {
+            lblStats.setForeground(new Color(231, 76, 60)); // Red color
+        } else {
+            lblStats.setForeground(new Color(39, 174, 96)); // Green color
+        }
     }
 
     /**
