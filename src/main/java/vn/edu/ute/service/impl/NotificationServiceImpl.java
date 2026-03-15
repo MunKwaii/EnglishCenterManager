@@ -16,12 +16,10 @@ import java.util.stream.Collectors;
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository repo = new NotificationRepositoryImpl();
 
-    // 1. Logic lọc thông báo theo Role: Người dùng thấy thông báo của Role mình + thông báo "All"
     @Override
     public List<Notification> getNotificationsForUser(NotificationTargetRole userRole) {
         return repo.findAll().stream()
-                .filter(n -> n.getTargetRole() == NotificationTargetRole.All
-                        || n.getTargetRole() == userRole)
+                .filter(n -> n.getTargetRole() == userRole)
                 .collect(Collectors.toList());
     }
 
@@ -97,7 +95,8 @@ public class NotificationServiceImpl implements NotificationService {
     public void updateNotification(Notification n) throws Exception {
         // KIỂM TRA QUYỀN
         if (n.getCreatedByUser() == null || !PermissionUtils.canManageNotifications(n.getCreatedByUser())) {
-            throw new Exception("Bạn không có quyền sửa thông báo! Chỉ Admin hoặc Staff (Admin/Manager) mới được phép.");
+            throw new Exception(
+                    "Bạn không có quyền sửa thông báo! Chỉ Admin hoặc Staff (Admin/Manager) mới được phép.");
         }
 
         // Kiểm tra notification có tồn tại không
@@ -126,7 +125,8 @@ public class NotificationServiceImpl implements NotificationService {
         // KIỂM TRA QUYỀN
         UserAccount currentUser = UserSession.getCurrentUser();
         if (currentUser == null || !PermissionUtils.canManageNotifications(currentUser)) {
-            throw new Exception("Bạn không có quyền xóa thông báo! Chỉ Admin hoặc Staff (Admin/Manager) mới được phép.");
+            throw new Exception(
+                    "Bạn không có quyền xóa thông báo! Chỉ Admin hoặc Staff (Admin/Manager) mới được phép.");
         }
 
         repo.deleteById(id);
@@ -150,7 +150,7 @@ public class NotificationServiceImpl implements NotificationService {
         if (currentUser.getRole() == vn.edu.ute.model.enums.UserRole.Student) {
             return allNotifications.stream()
                     .filter(n -> n.getTargetRole() == NotificationTargetRole.Student
-                              || n.getTargetRole() == NotificationTargetRole.All)
+                            || n.getTargetRole() == NotificationTargetRole.All)
                     .collect(Collectors.toList());
         }
 
@@ -158,7 +158,7 @@ public class NotificationServiceImpl implements NotificationService {
         if (currentUser.getRole() == vn.edu.ute.model.enums.UserRole.Teacher) {
             return allNotifications.stream()
                     .filter(n -> n.getTargetRole() == NotificationTargetRole.Teacher
-                              || n.getTargetRole() == NotificationTargetRole.All)
+                            || n.getTargetRole() == NotificationTargetRole.All)
                     .collect(Collectors.toList());
         }
 
