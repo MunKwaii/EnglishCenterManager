@@ -13,72 +13,78 @@ import java.util.List;
 
 public class StaffPanel extends JPanel {
     private final StaffService staffService = new StaffServiceImpl();
+
     private DefaultTableModel tableModel;
     private JTable staffTable;
-    private JTextField txtName, txtPhone, txtEmail;
+
+    private JTextField txtId, txtName, txtPhone, txtEmail;
     private JComboBox<StaffRole> cbRole;
 
-    // Staff ID variable
     private Long selectedStaffId = null;
 
     public StaffPanel() {
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // --- PHẦN FORM NHẬP LIỆU (NORTH) ---
-        JPanel formPanel = new JPanel(new GridLayout(2, 4, 10, 10));
+        // --- FORM ---
+        JPanel formPanel = new JPanel(new GridLayout(3, 4, 10, 10));
         formPanel.setBorder(BorderFactory.createTitledBorder("Thông tin Nhân sự"));
 
+        txtId = new JTextField();
+        txtId.setEditable(false);
         txtName = new JTextField();
         txtPhone = new JTextField();
         txtEmail = new JTextField();
         cbRole = new JComboBox<>(StaffRole.values());
 
-        formPanel.add(new JLabel("Họ và tên:")); formPanel.add(txtName);
+        formPanel.add(new JLabel("ID:")); formPanel.add(txtId);
         formPanel.add(new JLabel("Vai trò:")); formPanel.add(cbRole);
+        formPanel.add(new JLabel("Họ và tên:")); formPanel.add(txtName);
         formPanel.add(new JLabel("Số điện thoại:")); formPanel.add(txtPhone);
         formPanel.add(new JLabel("Email:")); formPanel.add(txtEmail);
+        formPanel.add(new JLabel("")); formPanel.add(new JLabel(""));
 
-        // --- PHẦN NÚT CHỨC NĂNG (CENTER) ---
+        // --- ACTIONS ---
         JPanel actionPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton btnSave = new JButton("Lưu");
+        JButton btnAdd = new JButton("Thêm");
+        JButton btnUpdate = new JButton("Cập nhật");
+        JButton btnDelete = new JButton("Xóa");
         JButton btnRefresh = new JButton("Làm mới form");
-        
-        // --- PHẦN BẢNG DỮ LIỆU (SOUTH) ---
+
+        actionPanel.add(btnAdd);
+        actionPanel.add(btnUpdate);
+        actionPanel.add(btnDelete);
+        actionPanel.add(btnRefresh);
+
+        // --- TABLE ---
         String[] columns = {"ID", "Họ tên", "Vai trò", "SĐT", "Email"};
         tableModel = new DefaultTableModel(columns, 0) {
-            @Override // Khóa không cho người dùng edit trực tiếp vào ô trong JTable
+            @Override
             public boolean isCellEditable(int row, int column) {
-                return false; 
+                return false;
             }
         };
         staffTable = new JTable(tableModel);
 
-        // --- SỬ DỤNG LAMBDA CHO CÁC SỰ KIỆN ---
-
-        // 1. Sự kiện Click vào hàng của JTable để lấy dữ liệu fill lên Form
+        // Row selection -> fill form
         staffTable.getSelectionModel().addListSelectionListener(e -> {
-            // !e.getValueIsAdjusting() giúp sự kiện chỉ chạy 1 lần khi nhả chuột
             if (!e.getValueIsAdjusting() && staffTable.getSelectedRow() != -1) {
                 int row = staffTable.getSelectedRow();
-                
-                // Lấy dữ liệu từ JTable dựa vào chỉ số cột (Column Index)
                 selectedStaffId = (Long) tableModel.getValueAt(row, 0);
-                txtName.setText(tableModel.getValueAt(row, 1).toString());
+
+                txtId.setText(String.valueOf(selectedStaffId));
+                txtName.setText(String.valueOf(tableModel.getValueAt(row, 1)));
                 cbRole.setSelectedItem(tableModel.getValueAt(row, 2));
-                txtPhone.setText(tableModel.getValueAt(row, 3).toString());
-                txtEmail.setText(tableModel.getValueAt(row, 4).toString());
+                txtPhone.setText(String.valueOf(tableModel.getValueAt(row, 3)));
+                txtEmail.setText(String.valueOf(tableModel.getValueAt(row, 4)));
             }
         });
 
-        // 2. Sự kiện bấm nút Lưu
-        btnSave.addActionListener(e -> saveStaff());
-
-        // 3. Sự kiện Làm mới form (Clear data)
+        // Buttons
+        btnAdd.addActionListener(e -> addStaff());
+        btnUpdate.addActionListener(e -> updateStaff());
+        btnDelete.addActionListener(e -> deleteStaff());
         btnRefresh.addActionListener(e -> clearForm());
-
-        actionPanel.add(btnSave);
-        actionPanel.add(btnRefresh);
 
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.add(formPanel, BorderLayout.CENTER);
@@ -87,35 +93,65 @@ public class StaffPanel extends JPanel {
         add(topPanel, BorderLayout.NORTH);
         add(new JScrollPane(staffTable), BorderLayout.CENTER);
 
-        // Tải dữ liệu lần đầu
         loadDataToTable();
     }
 
-    private void saveStaff() {
-        if (txtName.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập họ tên!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+    private Staff buildStaffFromForm(Long staffId) {
+        return Staff.builder()
+                .staffId(staffId)
+                .fullName(txtName.getText().trim())
+                .role((StaffRole) cbRole.getSelectedItem())
+                .phone(txtPhone.getText().trim())
+                .email(txtEmail.getText().trim())
+                .status(Status.Active)
+                .build();
+    }
+
+    private void addStaff() {
+        try {
+            Staff staff = buildStaffFromForm(null);
+            staffService.addStaff(staff);
+            JOptionPane.showMessageDialog(this, "Thêm mới thành công!");
+            clearForm();
+            loadDataToTable();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
+    private void updateStaff() {
+        if (selectedStaffId == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân sự cần cập nhật!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         try {
-            // Nếu selectedStaffId có giá trị, Hibernate sẽ tự động UPDATE. Ngược lại là INSERT.
-            Staff staff = Staff.builder()
-                    .staffId(selectedStaffId) 
-                    .fullName(txtName.getText().trim())
-                    .role((StaffRole) cbRole.getSelectedItem())
-                    .phone(txtPhone.getText().trim())
-                    .email(txtEmail.getText().trim())
-                    .status(Status.Active) // Mặc định là Active
-                    .build();
-            
-            staffService.saveStaff(staff);
-            
-            String msg = (selectedStaffId == null) ? "Thêm mới thành công!" : "Cập nhật thành công!";
-            JOptionPane.showMessageDialog(this, msg);
-            
-            clearForm(); // Xóa trắng form sau khi lưu
-            loadDataToTable(); // Tải lại bảng
+            Staff staff = buildStaffFromForm(selectedStaffId);
+            staffService.updateStaff(staff);
+            JOptionPane.showMessageDialog(this, "Cập nhật thành công!");
+            clearForm();
+            loadDataToTable();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
 
+    private void deleteStaff() {
+        if (selectedStaffId == null) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân sự cần xóa!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this, "Xóa nhân sự này?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        try {
+            staffService.deleteStaff(selectedStaffId);
+            JOptionPane.showMessageDialog(this, "Xóa thành công!");
+            clearForm();
+            loadDataToTable();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Lỗi: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
@@ -123,25 +159,27 @@ public class StaffPanel extends JPanel {
     }
 
     private void clearForm() {
-        selectedStaffId = null; // Reset lại biến ID để chuyển về trạng thái Thêm mới
+        selectedStaffId = null;
+        txtId.setText("");
         txtName.setText("");
         txtPhone.setText("");
         txtEmail.setText("");
         cbRole.setSelectedIndex(0);
-        staffTable.clearSelection(); // Bỏ chọn highlight dưới JTable
+        staffTable.clearSelection();
     }
 
     private void loadDataToTable() {
         try {
-            tableModel.setRowCount(0); // Xóa dữ liệu cũ trên giao diện
+            tableModel.setRowCount(0);
             List<Staff> staffs = staffService.getActiveStaffs();
-            
-            // Sử dụng LAMBDA Stream để đổ dữ liệu
+            if (staffs == null) return;
+
             staffs.forEach(s -> tableModel.addRow(new Object[]{
                     s.getStaffId(), s.getFullName(), s.getRole(), s.getPhone(), s.getEmail()
             }));
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Lỗi tải dữ liệu: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
     }
 }

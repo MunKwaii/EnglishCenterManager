@@ -26,6 +26,7 @@ import vn.edu.ute.view.EnrollmentPanel;
 import vn.edu.ute.view.ResultPanel;
 import vn.edu.ute.view.CertificatePanel;
 import vn.edu.ute.view.LoginFrame;
+import vn.edu.ute.view.StaffPanel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.JScrollPane;
 import javax.swing.BorderFactory;
@@ -118,6 +119,7 @@ public class MainFrame extends JFrame {
         String[] allModules = {
                 MenuConstants.MODULE_TEACHER,
                 MenuConstants.MODULE_STUDENT,
+                MenuConstants.MODULE_STAFF,
                 MenuConstants.MODULE_CLASS,
                 MenuConstants.MODULE_COURSE,
                 MenuConstants.MODULE_FINANCE,
@@ -193,7 +195,8 @@ public class MainFrame extends JFrame {
         switch (moduleName) {
             case MenuConstants.MODULE_TEACHER: return new TeacherPanel();
             case MenuConstants.MODULE_STUDENT: return new StudentPanel();
-            case MenuConstants.MODULE_CLASS: 
+            case MenuConstants.MODULE_STAFF: return new StaffPanel();
+            case MenuConstants.MODULE_CLASS:
                 if (currentUser.getRole() == vn.edu.ute.model.enums.UserRole.Teacher) {
                     return new TeacherDashboardPanel();
                 } else if (currentUser.getRole() == vn.edu.ute.model.enums.UserRole.Student) {
@@ -222,3 +225,4 @@ public class MainFrame extends JFrame {
         new LoginFrame().setVisible(true);
     }
 }
+

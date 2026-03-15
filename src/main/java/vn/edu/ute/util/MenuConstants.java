@@ -11,6 +11,7 @@ public class MenuConstants {
     // Danh sách các Module trong ứng dụng
     public static final String MODULE_TEACHER = "Quản lý Giáo viên";
     public static final String MODULE_STUDENT = "Quản lý Học viên";
+    public static final String MODULE_STAFF = "Quản lý Nhân sự";
     public static final String MODULE_CLASS = "Quản lý Lớp học";
     public static final String MODULE_COURSE = "Quản lý Khóa học";
     public static final String MODULE_FINANCE = "Quản lý Tài chính";
@@ -35,6 +36,7 @@ public class MenuConstants {
         modulePermissions.put(MODULE_TEACHER, staffAndAdmin); // Thường Teacher không quản lý chức năng danh sách
                                                               // Teacher hệ thống
         modulePermissions.put(MODULE_STUDENT, staffAndAdmin);
+        modulePermissions.put(MODULE_STAFF, staffAndAdmin);
         modulePermissions.put(MODULE_CLASS, allRoles); // Teacher và Student cũng có thể xem Lớp Học của bản thân
         modulePermissions.put(MODULE_COURSE, staffAndAdmin);
         modulePermissions.put(MODULE_FINANCE, staffAndAdmin); // Sinh viên chỉ xem qua module cá nhân
