@@ -8,16 +8,13 @@ import vn.edu.ute.model.enums.Status;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/**
- * Chú thích: Lớp thực thể ánh xạ bảng 'students'.
- * Đã tối ưu bằng Lombok và ánh xạ Enum chính xác.
- */
 @Entity
 @Table(name = "students")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder // Thêm Builder để dễ dàng tạo object: Student.builder().fullName("...").build();
+@Builder
 public class Student {
 
     @Id

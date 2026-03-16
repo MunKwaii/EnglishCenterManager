@@ -64,4 +64,15 @@ public class AcademicClassServiceImpl implements AcademicClassService {
                 .filter(c -> c.getCourse() != null && c.getCourse().getCourseId().equals(courseId))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<AcademicClass> getClassesByTeacher(Long teacherId) {
+        List<AcademicClass> allClasses = classRepo.findAll();
+        if (allClasses == null)
+            return List.of();
+
+        return allClasses.stream()
+                .filter(c -> c.getTeacher() != null && c.getTeacher().getTeacherId().equals(teacherId))
+                .collect(Collectors.toList());
+    }
 }

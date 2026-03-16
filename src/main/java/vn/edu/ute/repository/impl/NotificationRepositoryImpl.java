@@ -21,15 +21,23 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     public void save(Notification notification) {
         try {
             txManager.runInTransaction(em -> {
-                if (notification.getNotificationId() == null) {
-                    em.persist(notification); // Thêm thông báo mới
-                } else {
-                    em.merge(notification);   // Cập nhật thông báo cũ
-                }
+                em.persist(notification); // Chỉ thêm mới
                 return null;
             });
         } catch (Exception e) {
             throw new RuntimeException("Lỗi khi lưu thông báo: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void update(Notification notification) {
+        try {
+            txManager.runInTransaction(em -> {
+                em.merge(notification); // Chỉ cập nhật
+                return null;
+            });
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi cập nhật thông báo: " + e.getMessage(), e);
         }
     }
 
@@ -53,8 +61,8 @@ public class NotificationRepositoryImpl implements NotificationRepository {
     public List<Notification> findAll() {
         try {
             return txManager.runInTransaction(em -> {
-                // Sắp xếp thông báo mới nhất lên đầu
-                String jpql = "SELECT n FROM Notification n JOIN FETCH n.createdByUser ORDER BY n.createdAt DESC";
+                // LEFT JOIN FETCH để cho phép createdByUser null
+                String jpql = "SELECT n FROM Notification n LEFT JOIN FETCH n.createdByUser ORDER BY n.createdAt DESC";
                 return em.createQuery(jpql, Notification.class).getResultList();
             });
         } catch (Exception e) {

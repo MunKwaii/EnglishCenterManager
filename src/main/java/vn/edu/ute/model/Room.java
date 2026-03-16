@@ -39,6 +39,7 @@ public class Room {
 
     // Trong class Room.java
     @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
     @JoinColumn(name = "branch_id")
     private Branch branch;
 

@@ -16,6 +16,7 @@ public interface NotificationService {
 
     // --- Các hàm CRUD cơ bản ---
     void createNotification(Notification n) throws Exception;
+    void updateNotification(Notification n) throws Exception;
     void deleteNotification(Long id) throws Exception;
     List<Notification> getAllNotifications();
 }

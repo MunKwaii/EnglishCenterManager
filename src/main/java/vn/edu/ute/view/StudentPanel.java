@@ -25,7 +25,9 @@ public class StudentPanel extends JPanel {
     private JSpinner spDob;
     private JComboBox<Gender> cbGender;
     private JComboBox<Status> cbStatus;
-    private JButton btnAdd, btnUpdate, btnDelete, btnSearch, btnRefresh;
+    private JComboBox<String> cbFilterGender, cbSearchType;
+    private JButton btnAdd, btnUpdate, btnDelete, btnSearch, btnRefresh, btnSort;
+    private JLabel lblStats;
 
     public StudentPanel() {
         setLayout(new BorderLayout(10, 10));
@@ -37,6 +39,7 @@ public class StudentPanel extends JPanel {
         add(createButtonPanel(), BorderLayout.SOUTH);
 
         loadDataToTable(studentService.getAllStudents());
+        updateStats();
     }
 
     private JPanel createFormPanel() {
@@ -55,6 +58,9 @@ public class StudentPanel extends JPanel {
 
         cbGender = new JComboBox<>(Gender.values());
         cbStatus = new JComboBox<>(Status.values());
+
+        lblStats = new JLabel("Tổng học viên đang hoạt động: 0");
+        lblStats.setFont(new Font("Arial", Font.BOLD, 12));
 
         formPanel.add(new JLabel("ID:")); formPanel.add(txtId);
         formPanel.add(new JLabel("Họ tên:")); formPanel.add(txtFullName);
@@ -111,18 +117,28 @@ public class StudentPanel extends JPanel {
         JPanel actionPanel = new JPanel(new BorderLayout());
 
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        txtSearch = new JTextField(15);
-        btnSearch = new JButton("Tìm tên");
-        searchPanel.add(txtSearch); searchPanel.add(btnSearch);
+        txtSearch = new JTextField(12);
+        btnSearch = new JButton("Tìm kiếm");
+        cbSearchType = new JComboBox<>(new String[]{"Tên học viên", "Số điện thoại"});
+
+        cbFilterGender = new JComboBox<>(new String[]{"Tất cả giới tính", "Nam", "Nữ"});
+
+        searchPanel.add(new JLabel("Lọc giới tính:"));
+        searchPanel.add(cbFilterGender);
+        searchPanel.add(new JLabel("Tìm theo:"));
+        searchPanel.add(cbSearchType);
+        searchPanel.add(txtSearch);
+        searchPanel.add(btnSearch);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         btnAdd = new JButton("Thêm mới");
         btnUpdate = new JButton("Cập nhật");
         btnDelete = new JButton("Xóa");
+        btnSort = new JButton("Sắp xếp A-Z");
         btnRefresh = new JButton("Làm mới");
 
         buttonPanel.add(btnAdd); buttonPanel.add(btnUpdate);
-        buttonPanel.add(btnDelete); buttonPanel.add(btnRefresh);
+        buttonPanel.add(btnDelete); buttonPanel.add(btnSort); buttonPanel.add(btnRefresh);
 
         actionPanel.add(searchPanel, BorderLayout.WEST);
         actionPanel.add(buttonPanel, BorderLayout.EAST);
@@ -133,28 +149,79 @@ public class StudentPanel extends JPanel {
 
     private void setupListeners() {
         btnAdd.addActionListener(e -> handleAddUpdate(null));
+
         btnUpdate.addActionListener(e -> {
-            if (txtId.getText().isEmpty()) return;
+            if (txtId.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Chọn một học viên để sửa!");
+                return;
+            }
             handleAddUpdate(Long.parseLong(txtId.getText()));
         });
 
         btnDelete.addActionListener(e -> {
             if (txtId.getText().isEmpty()) return;
-            try {
-                studentService.deleteStudent(Long.parseLong(txtId.getText()));
-                refreshUI();
-            } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Lỗi khi xóa!"); }
+            int confirm = JOptionPane.showConfirmDialog(this, "Xóa học viên này?", "Xác nhận", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                    studentService.deleteStudent(Long.parseLong(txtId.getText()));
+                    refreshUI();
+                } catch (Exception ex) { JOptionPane.showMessageDialog(this, "Lỗi khi xóa!"); }
+            }
         });
 
+        // Filter theo giới tính
+        cbFilterGender.addActionListener(e -> {
+            txtSearch.setText("");
+            loadDataToTable(fetchFilteredStudents());
+            updateStats();
+        });
+
+        // Tìm kiếm theo loại (tên hoặc SĐT)
         btnSearch.addActionListener(e -> {
-            String keyword = txtSearch.getText().toLowerCase();
-            List<Student> results = studentService.getAllStudents().stream()
-                    .filter(s -> s.getFullName().toLowerCase().contains(keyword))
-                    .toList();
+            String keyword = txtSearch.getText().trim();
+            if (keyword.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Nhập thông tin tìm kiếm!");
+                return;
+            }
+
+            String searchType = (String) cbSearchType.getSelectedItem();
+            List<Student> results;
+
+            if ("Tên học viên".equals(searchType)) {
+                results = studentService.getAllStudents().stream()
+                        .filter(s -> s.getFullName().toLowerCase().contains(keyword.toLowerCase()))
+                        .toList();
+            } else { // Số điện thoại
+                Student found = studentService.findByPhone(keyword);
+                results = found != null ? List.of(found) : List.of();
+            }
+
+            if (results.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy kết quả!");
+            }
             loadDataToTable(results);
         });
 
+        // Sắp xếp từ A-Z
+        btnSort.addActionListener(e -> {
+            List<Student> sorted = studentService.getSortedStudentsByName();
+            loadDataToTable(sorted);
+            JOptionPane.showMessageDialog(this, "Đã sắp xếp từ A-Z");
+        });
+
         btnRefresh.addActionListener(e -> refreshUI());
+    }
+
+    private List<Student> fetchFilteredStudents() {
+        String filterType = (String) cbFilterGender.getSelectedItem();
+
+        if ("Nam".equals(filterType)) {
+            return studentService.filterByGender(Gender.Male);
+        } else if ("Nữ".equals(filterType)) {
+            return studentService.filterByGender(Gender.Female);
+        } else {
+            return studentService.getAllStudents();
+        }
     }
 
     private void handleAddUpdate(Long id) {
@@ -198,6 +265,14 @@ public class StudentPanel extends JPanel {
         txtId.setText(""); txtFullName.setText(""); txtPhone.setText("");
         txtEmail.setText(""); txtAddress.setText(""); txtSearch.setText("");
         spDob.setValue(new Date());
+        cbFilterGender.setSelectedIndex(0);
         loadDataToTable(studentService.getAllStudents());
+        updateStats();
+    }
+
+    private void updateStats() {
+        long activeCount = studentService.countActiveStudents();
+        long totalCount = studentService.getAllStudents().size();
+        lblStats.setText(String.format("Tổng học viên: %d | Đang hoạt động: %d", totalCount, activeCount));
     }
 }

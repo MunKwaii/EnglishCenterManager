@@ -18,10 +18,12 @@ public class Certificate {
     private Long certificateId;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
     @JoinColumn(name = "class_id")
     private AcademicClass academicClass;
 

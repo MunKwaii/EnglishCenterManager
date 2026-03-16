@@ -1,10 +1,13 @@
 package vn.edu.ute.service.impl;
 
 import vn.edu.ute.model.Notification;
+import vn.edu.ute.model.UserAccount;
 import vn.edu.ute.model.enums.NotificationTargetRole;
 import vn.edu.ute.repository.NotificationRepository;
 import vn.edu.ute.repository.impl.NotificationRepositoryImpl;
 import vn.edu.ute.service.NotificationService;
+import vn.edu.ute.util.PermissionUtils;
+import vn.edu.ute.util.UserSession;
 
 import java.util.Comparator;
 import java.util.List;
@@ -13,12 +16,10 @@ import java.util.stream.Collectors;
 public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository repo = new NotificationRepositoryImpl();
 
-    // 1. Logic lọc thông báo theo Role: Người dùng thấy thông báo của Role mình + thông báo "All"
     @Override
     public List<Notification> getNotificationsForUser(NotificationTargetRole userRole) {
         return repo.findAll().stream()
-                .filter(n -> n.getTargetRole() == NotificationTargetRole.All
-                        || n.getTargetRole() == userRole)
+                .filter(n -> n.getTargetRole() == userRole)
                 .collect(Collectors.toList());
     }
 
@@ -87,16 +88,81 @@ public class NotificationServiceImpl implements NotificationService {
         if (n.getContent() == null || n.getContent().trim().isEmpty()) {
             throw new Exception("Nội dung thông báo không được để trống!");
         }
-        repo.save(n); //
+        repo.save(n);
+    }
+
+    @Override
+    public void updateNotification(Notification n) throws Exception {
+        // KIỂM TRA QUYỀN
+        if (n.getCreatedByUser() == null || !PermissionUtils.canManageNotifications(n.getCreatedByUser())) {
+            throw new Exception(
+                    "Bạn không có quyền sửa thông báo! Chỉ Admin hoặc Staff (Admin/Manager) mới được phép.");
+        }
+
+        // Kiểm tra notification có tồn tại không
+        if (n.getNotificationId() == null) {
+            throw new Exception("Không tìm thấy ID thông báo để cập nhật!");
+        }
+
+        var existing = repo.findById(n.getNotificationId());
+        if (existing.isEmpty()) {
+            throw new Exception("Thông báo không tồn tại trong hệ thống!");
+        }
+
+        // Validation
+        if (n.getTitle() == null || n.getTitle().trim().isEmpty()) {
+            throw new Exception("Tiêu đề không được để trống!");
+        }
+        if (n.getContent() == null || n.getContent().trim().isEmpty()) {
+            throw new Exception("Nội dung thông báo không được để trống!");
+        }
+
+        repo.update(n);
     }
 
     @Override
     public void deleteNotification(Long id) throws Exception {
-        repo.deleteById(id); //
+        // KIỂM TRA QUYỀN
+        UserAccount currentUser = UserSession.getCurrentUser();
+        if (currentUser == null || !PermissionUtils.canManageNotifications(currentUser)) {
+            throw new Exception(
+                    "Bạn không có quyền xóa thông báo! Chỉ Admin hoặc Staff (Admin/Manager) mới được phép.");
+        }
+
+        repo.deleteById(id);
     }
 
     @Override
     public List<Notification> getAllNotifications() {
-        return repo.findAll(); //
+        UserAccount currentUser = UserSession.getCurrentUser();
+        if (currentUser == null) {
+            return List.of(); // Không login thì không xem được gì
+        }
+
+        List<Notification> allNotifications = repo.findAll();
+
+        // Admin và Staff: Xem hết
+        if (PermissionUtils.canViewAllNotifications(currentUser)) {
+            return allNotifications;
+        }
+
+        // Student: Chỉ xem Student + All
+        if (currentUser.getRole() == vn.edu.ute.model.enums.UserRole.Student) {
+            return allNotifications.stream()
+                    .filter(n -> n.getTargetRole() == NotificationTargetRole.Student
+                            || n.getTargetRole() == NotificationTargetRole.All)
+                    .collect(Collectors.toList());
+        }
+
+        // Teacher: Chỉ xem Teacher + All
+        if (currentUser.getRole() == vn.edu.ute.model.enums.UserRole.Teacher) {
+            return allNotifications.stream()
+                    .filter(n -> n.getTargetRole() == NotificationTargetRole.Teacher
+                            || n.getTargetRole() == NotificationTargetRole.All)
+                    .collect(Collectors.toList());
+        }
+
+        // Mặc định: Không xem được gì
+        return List.of();
     }
 }

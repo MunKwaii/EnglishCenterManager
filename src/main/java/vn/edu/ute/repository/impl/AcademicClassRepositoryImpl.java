@@ -11,10 +11,13 @@ public class AcademicClassRepositoryImpl implements AcademicClassRepository {
     @Override
     public List<AcademicClass> findAll() {
         try {
-            return txManager.runInTransaction(
-                    em -> em.createQuery(
-                            "SELECT c FROM AcademicClass c JOIN FETCH c.course LEFT JOIN FETCH c.room LEFT JOIN FETCH c.teacher",
-                            AcademicClass.class).getResultList());
+            return txManager.runInTransaction(em -> em.createQuery(
+                    "SELECT c FROM AcademicClass c " +
+                    "JOIN FETCH c.course " +
+                    "LEFT JOIN FETCH c.room " +
+                    "LEFT JOIN FETCH c.teacher " +
+                    "LEFT JOIN FETCH c.branch", 
+                    AcademicClass.class).getResultList());
         } catch (Exception e) {
             e.printStackTrace();
             return null;

@@ -18,7 +18,9 @@ public class TeacherPanel extends JPanel {
     private DefaultTableModel tableModel;
     private JTextField txtId, txtName, txtPhone, txtEmail, txtSpecialty, txtSearch;
     private JComboBox<Status> cbStatus;
-    private JButton btnAdd, btnUpdate, btnDelete, btnSearch, btnRefresh;
+    private JComboBox<String> cbFilterStatus, cbSearchType;
+    private JButton btnAdd, btnUpdate, btnDelete, btnSearch, btnRefresh, btnSort;
+    private JLabel lblStats;
 
     public TeacherPanel() {
         setLayout(new BorderLayout(10, 10));
@@ -29,7 +31,8 @@ public class TeacherPanel extends JPanel {
         add(createTablePanel(), BorderLayout.CENTER);
         add(createButtonPanel(), BorderLayout.SOUTH);
 
-        loadDataToTable(teacherService.getAllTeachers());
+        loadDataToTable(fetchFilteredTeachers());
+        updateStats();
     }
 
     private JPanel createFormPanel() {
@@ -43,6 +46,8 @@ public class TeacherPanel extends JPanel {
         txtEmail = new JTextField();
         txtSpecialty = new JTextField();
         cbStatus = new JComboBox<>(Status.values());
+        lblStats = new JLabel("Tổng giáo viên đang hoạt động: 0");
+        lblStats.setFont(new Font("Arial", Font.BOLD, 12));
 
         formPanel.add(new JLabel("ID:")); formPanel.add(txtId);
         formPanel.add(new JLabel("Họ Tên:")); formPanel.add(txtName);
@@ -95,19 +100,29 @@ public class TeacherPanel extends JPanel {
 
         // Phần tìm kiếm bên trái
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        txtSearch = new JTextField(15);
-        btnSearch = new JButton("Tìm chuyên môn");
-        searchPanel.add(txtSearch); searchPanel.add(btnSearch);
+        txtSearch = new JTextField(12);
+        btnSearch = new JButton("Tìm kiếm");
+        cbSearchType = new JComboBox<>(new String[]{"Chuyên môn", "Số điện thoại"});
+
+        cbFilterStatus = new JComboBox<>(new String[]{"Tất cả", "Đang hoạt động", "Ngừng hoạt động"});
+        searchPanel.add(new JLabel("Lọc trạng thái:"));
+        searchPanel.add(cbFilterStatus);
+        
+        searchPanel.add(new JLabel("Tìm theo:"));
+        searchPanel.add(cbSearchType);
+        searchPanel.add(txtSearch);
+        searchPanel.add(btnSearch);
 
         // Các nút chức năng bên phải
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         btnAdd = new JButton("Thêm mới");
         btnUpdate = new JButton("Cập nhật");
         btnDelete = new JButton("Xóa");
+        btnSort = new JButton("Sắp xếp A-Z");
         btnRefresh = new JButton("Làm mới");
 
         buttonPanel.add(btnAdd); buttonPanel.add(btnUpdate);
-        buttonPanel.add(btnDelete); buttonPanel.add(btnRefresh);
+        buttonPanel.add(btnDelete); buttonPanel.add(btnSort); buttonPanel.add(btnRefresh);
 
         actionPanel.add(searchPanel, BorderLayout.WEST);
         actionPanel.add(buttonPanel, BorderLayout.EAST);
@@ -141,13 +156,58 @@ public class TeacherPanel extends JPanel {
             }
         });
 
-        // Tìm kiếm sử dụng Lambda
+        // Lọc theo trạng thái
+        cbFilterStatus.addActionListener(e -> {
+            txtSearch.setText("");
+            loadDataToTable(fetchFilteredTeachers());
+            updateStats();
+        });
+
+        // Tìm kiếm theo loại (chuyên môn hoặc SĐT)
         btnSearch.addActionListener(e -> {
-            String keyword = txtSearch.getText();
-            loadDataToTable(teacherService.findBySpecialty(keyword));
+            String keyword = txtSearch.getText().trim();
+            if (keyword.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Nhập thông tin tìm kiếm!");
+                return;
+            }
+
+            String searchType = (String) cbSearchType.getSelectedItem();
+            List<Teacher> results;
+
+            if ("Chuyên môn".equals(searchType)) {
+                results = teacherService.findBySpecialty(keyword);
+            } else { // Số điện thoại
+                Teacher found = teacherService.findByPhone(keyword);
+                results = found != null ? List.of(found) : List.of();
+            }
+
+            if (results.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy kết quả!");
+            }
+            loadDataToTable(results);
+        });
+
+        // Sắp xếp từ A-Z
+        btnSort.addActionListener(e -> {
+            List<Teacher> sorted = teacherService.getSortedTeachers();
+            loadDataToTable(sorted);
+            JOptionPane.showMessageDialog(this, "Đã sắp xếp từ A-Z");
         });
 
         btnRefresh.addActionListener(e -> refreshUI());
+    }
+
+    private List<Teacher> fetchFilteredTeachers() {
+        String filterType = (String) cbFilterStatus.getSelectedItem();
+        List<Teacher> allTeachers = teacherService.getAllTeachers();
+        
+        if ("Đang hoạt động".equals(filterType)) {
+            return allTeachers.stream().filter(t -> t.getStatus() == Status.Active).toList();
+        } else if ("Ngừng hoạt động".equals(filterType)) {
+            return allTeachers.stream().filter(t -> t.getStatus() == Status.Inactive).toList();
+        } else {
+            return allTeachers;
+        }
     }
 
     private void handleAddUpdate(Long id) {
@@ -187,6 +247,14 @@ public class TeacherPanel extends JPanel {
         txtId.setText(""); txtName.setText(""); txtPhone.setText("");
         txtEmail.setText(""); txtSpecialty.setText(""); txtSearch.setText("");
         cbStatus.setSelectedIndex(0);
-        loadDataToTable(teacherService.getAllTeachers());
+        cbFilterStatus.setSelectedIndex(0);
+        loadDataToTable(fetchFilteredTeachers());
+        updateStats();
+    }
+
+    private void updateStats() {
+        long activeCount = teacherService.countActiveTeachers();
+        long totalCount = teacherService.getAllTeachers().size();
+        lblStats.setText(String.format("Tổng giáo viên: %d | Đang hoạt động: %d", totalCount, activeCount));
     }
 }

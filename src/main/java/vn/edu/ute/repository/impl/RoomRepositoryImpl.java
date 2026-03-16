@@ -12,7 +12,7 @@ public class RoomRepositoryImpl implements RoomRepository {
     public List<Room> findAll() {
         try {
             return txManager.runInTransaction(em ->
-                    em.createQuery("SELECT r FROM Room r", Room.class).getResultList()
+                    em.createQuery("SELECT r FROM Room r LEFT JOIN FETCH r.branch", Room.class).getResultList()
             );
         } catch (Exception e) {
             e.printStackTrace();
@@ -23,7 +23,12 @@ public class RoomRepositoryImpl implements RoomRepository {
     @Override
     public Room findById(Long id) {
         try {
-            return txManager.runInTransaction(em -> em.find(Room.class, id));
+            return txManager.runInTransaction(em -> {
+                List<Room> rooms = em.createQuery("SELECT r FROM Room r LEFT JOIN FETCH r.branch WHERE r.roomId = :id", Room.class)
+                        .setParameter("id", id)
+                        .getResultList();
+                return rooms.isEmpty() ? null : rooms.get(0);
+            });
         } catch (Exception e) {
             e.printStackTrace();
             return null;

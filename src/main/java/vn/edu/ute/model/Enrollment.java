@@ -12,7 +12,8 @@ import java.time.LocalDateTime;
 @Table(name = "enrollments", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"student_id", "class_id"})
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -20,7 +21,7 @@ public class Enrollment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "enrollment_id") // Ánh xạ BIGINT UNSIGNED
+    @Column(name = "enrollment_id")
     private Long enrollmentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -43,8 +44,8 @@ public class Enrollment {
     private EnrollmentResult result = EnrollmentResult.NA;
 
     @Column(name = "created_at", insertable = false, updatable = false)
-    private LocalDateTime createdAt; // Dữ liệu hệ thống
+    private LocalDateTime createdAt;
 
     @Column(name = "updated_at", insertable = false, updatable = false)
-    private LocalDateTime updatedAt; // Thời điểm cập nhật cuối
+    private LocalDateTime updatedAt;
 }

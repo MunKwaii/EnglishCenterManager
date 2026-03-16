@@ -24,14 +24,17 @@ public class AcademicClass {
 
     // --- MỐI QUAN HỆ KHÓA NGOẠI ---
 
+    @ToString.Exclude // <--- THÊM DÒNG NÀY
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "course_id", nullable = false)
     private Course course;
 
+    @ToString.Exclude 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id")
     private Teacher teacher;
 
+    @ToString.Exclude 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "room_id")
     private Room room;
@@ -57,9 +60,8 @@ public class AcademicClass {
     @Column(name = "updated_at", insertable = false, updatable = false)
     private LocalDateTime updatedAt;
 
-    // Trong class AcademicClass.java
+    @ToString.Exclude // <--- ĐẶC BIỆT LÀ THÊM VÀO ĐÂY ĐỂ FIX LỖI BẠN ĐANG GẶP
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "branch_id")
     private Branch branch;
-
 }

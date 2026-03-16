@@ -1,8 +1,9 @@
-package vn.edu.ute.view;
+package vn.edu.ute.view.test;
 
+import vn.edu.ute.view.*;
 import javax.swing.*;
 
-public class TestTeacherUI {
+public class TestStudentUI {
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -10,12 +11,13 @@ public class TestTeacherUI {
             e.printStackTrace();
         }
 
-        JFrame frame = new JFrame("Quản lý Giáo viên - Test Mode");
+        JFrame frame = new JFrame("Quản lý Học viên - MIS Center Test");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(1000, 600);
+        frame.setSize(1100, 650);
         frame.setLocationRelativeTo(null);
 
-        frame.setContentPane(new TeacherPanel());
+        // Nhúng StudentPanel vào JFrame theo phong cách setContentPane
+        frame.setContentPane(new StudentPanel());
 
         frame.setVisible(true);
     }

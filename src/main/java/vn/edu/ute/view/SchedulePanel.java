@@ -9,9 +9,13 @@ import vn.edu.ute.service.RoomService;
 import vn.edu.ute.service.ScheduleService;
 import vn.edu.ute.service.TeacherService;
 import vn.edu.ute.service.impl.AcademicClassServiceImpl;
+import vn.edu.ute.service.EnrollmentService;
+import vn.edu.ute.model.Enrollment;
+import vn.edu.ute.service.impl.EnrollmentServiceImpl;
 import vn.edu.ute.service.impl.RoomServiceImpl;
 import vn.edu.ute.service.impl.ScheduleServiceImpl;
 import vn.edu.ute.service.impl.TeacherServiceImpl;
+import vn.edu.ute.util.UserSession;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -30,6 +34,7 @@ public class SchedulePanel extends JPanel {
     private final AcademicClassService classService = new AcademicClassServiceImpl();
     private final RoomService roomService = new RoomServiceImpl();
     private final TeacherService teacherService = new TeacherServiceImpl();
+    private final EnrollmentService enrollmentService = new EnrollmentServiceImpl();
 
     // Table
     private JTable scheduleTable;
@@ -51,6 +56,7 @@ public class SchedulePanel extends JPanel {
     private JButton btnAddSchedule;
     private JButton btnUpdateSchedule;
     private JButton btnDeleteSchedule;
+    private JButton btnRefreshSchedule;
 
     public SchedulePanel() {
         setLayout(new BorderLayout(10, 10));
@@ -124,6 +130,7 @@ public class SchedulePanel extends JPanel {
         btnAddSchedule = new JButton("Thêm");
         btnUpdateSchedule = new JButton("Cập nhật");
         btnDeleteSchedule = new JButton("Xóa");
+        btnRefreshSchedule = new JButton("Làm mới Form");
 
         btnUpdateSchedule.setEnabled(false);
         btnDeleteSchedule.setEnabled(false);
@@ -167,6 +174,7 @@ public class SchedulePanel extends JPanel {
         actionPanel.add(btnAddSchedule);
         actionPanel.add(btnUpdateSchedule);
         actionPanel.add(btnDeleteSchedule);
+        actionPanel.add(btnRefreshSchedule);
 
         gbc.gridx = 4;
         gbc.gridy = 1;
@@ -177,57 +185,95 @@ public class SchedulePanel extends JPanel {
         btnAddSchedule.addActionListener(e -> addSchedule());
         btnUpdateSchedule.addActionListener(e -> updateSchedule());
         btnDeleteSchedule.addActionListener(e -> deleteSchedule());
+        btnRefreshSchedule.addActionListener(e -> clearForm());
 
         // Table Selection Listener
-        scheduleTable.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                int row = scheduleTable.rowAtPoint(evt.getPoint());
-                if (row >= 0) {
-                    scheduleTable.setRowSelectionInterval(row, row);
-                    selectedScheduleId = (Long) tableModel.getValueAt(row, 0);
+        scheduleTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && scheduleTable.getSelectedRow() != -1) {
+                int row = scheduleTable.getSelectedRow();
+                selectedScheduleId = (Long) tableModel.getValueAt(row, 0);
 
-                    // Populate Form
-                    txtStudyDate.setText(tableModel.getValueAt(row, 1).toString());
+                // Populate Form
+                txtStudyDate.setText(tableModel.getValueAt(row, 1).toString());
 
-                    LocalTime startT = (LocalTime) tableModel.getValueAt(row, 2);
-                    LocalTime endT = (LocalTime) tableModel.getValueAt(row, 3);
+                LocalTime startT = (LocalTime) tableModel.getValueAt(row, 2);
+                LocalTime endT = (LocalTime) tableModel.getValueAt(row, 3);
 
-                    Calendar cal = Calendar.getInstance();
-                    cal.set(Calendar.HOUR_OF_DAY, startT.getHour());
-                    cal.set(Calendar.MINUTE, startT.getMinute());
-                    spinStartTime.setValue(cal.getTime());
+                Calendar cal = Calendar.getInstance();
+                cal.set(Calendar.HOUR_OF_DAY, startT.getHour());
+                cal.set(Calendar.MINUTE, startT.getMinute());
+                spinStartTime.setValue(cal.getTime());
 
-                    cal.set(Calendar.HOUR_OF_DAY, endT.getHour());
-                    cal.set(Calendar.MINUTE, endT.getMinute());
-                    spinEndTime.setValue(cal.getTime());
+                cal.set(Calendar.HOUR_OF_DAY, endT.getHour());
+                cal.set(Calendar.MINUTE, endT.getMinute());
+                spinEndTime.setValue(cal.getTime());
 
-                    String className = (String) tableModel.getValueAt(row, 4);
+                String className = (String) tableModel.getValueAt(row, 4);
+                if (className != null && !className.isEmpty()) {
                     for (int i = 0; i < classCombo.getItemCount(); i++) {
                         if (classCombo.getItemAt(i).toString().equals(className)) {
                             classCombo.setSelectedIndex(i);
                             break;
                         }
                     }
+                } else if (classCombo.getItemCount() > 0) {
+                    classCombo.setSelectedIndex(0);
+                }
 
-                    String roomName = (String) tableModel.getValueAt(row, 5);
+                String roomName = (String) tableModel.getValueAt(row, 5);
+                if (roomName != null && !roomName.isEmpty()) {
                     for (int i = 0; i < roomCombo.getItemCount(); i++) {
                         if (roomCombo.getItemAt(i).toString().equals(roomName)) {
                             roomCombo.setSelectedIndex(i);
                             break;
                         }
                     }
+                } else if (roomCombo.getItemCount() > 0) {
+                    roomCombo.setSelectedIndex(0);
+                }
 
-                    btnUpdateSchedule.setEnabled(true);
-                    btnDeleteSchedule.setEnabled(true);
-                    btnAddSchedule.setEnabled(false);
-                } else {
-                    clearForm();
+                btnUpdateSchedule.setEnabled(true);
+                btnDeleteSchedule.setEnabled(true);
+                btnAddSchedule.setEnabled(false);
+
+                // Permission check
+                Long currentTeacherId = UserSession.getTeacherId();
+                if (currentTeacherId != null) {
+                    // It's a teacher logged in. Check if they own this class.
+                    boolean isOwnClass = false;
+                    Object obj = tableModel.getValueAt(row, 4);
+                    String cName = (obj != null) ? obj.toString() : "";
+                    for (int i = 0; i < classCombo.getItemCount(); i++) {
+                        ClassItem ci = classCombo.getItemAt(i);
+                        if (ci.getAcademicClass() != null 
+                            && ci.getAcademicClass().getClassName().equals(cName)
+                            && ci.getAcademicClass().getTeacher() != null
+                            && ci.getAcademicClass().getTeacher().getTeacherId().equals(currentTeacherId)) {
+                            isOwnClass = true;
+                            break;
+                        }
+                    }
+                    if (!isOwnClass) {
+                        btnUpdateSchedule.setEnabled(false);
+                        btnDeleteSchedule.setEnabled(false);
+                        btnAddSchedule.setEnabled(false); // They can't add from someone else's class either, though clearForm handles Add
+                    }
                 }
             }
         });
 
-        add(formPanel, BorderLayout.SOUTH);
+        // Tùy chỉnh quyền "Thêm" ban đầu cho giáo viên
+        if (UserSession.getTeacherId() != null && classCombo.getItemCount() == 0) {
+            btnAddSchedule.setEnabled(false); // Ko có lớp thì ko cho thêm
+        }
+
+        // Tùy chỉnh quyền cho Học viên: Ẩn luôn khu vực Thêm/Sửa/Xóa
+        if (UserSession.getStudentId() != null) {
+            add(formPanel, BorderLayout.SOUTH); // Thay vì xoá hẳn, mình ẩn nó đi để không phá vỡ UI
+            formPanel.setVisible(false);
+        } else {
+            add(formPanel, BorderLayout.SOUTH);
+        }
     }
 
     private void loadInitialData() {
@@ -236,11 +282,46 @@ public class SchedulePanel extends JPanel {
         filterTeacherCombo.addItem(new TeacherItem(null, "Tất cả"));
 
         List<AcademicClass> classes = classService.getAllClasses();
+        Long currentTeacherId = UserSession.getTeacherId();
+        Long currentStudentId = UserSession.getStudentId();
+        
         if (classes != null) {
+            // Đối với Học viên, lấy danh sách các lớp đang theo học
+            List<Long> enrolledClassIds = null;
+            if (currentStudentId != null) {
+                try {
+                    List<Enrollment> enrollments = enrollmentService.getEnrollmentsByStudentId(currentStudentId);
+                    enrolledClassIds = enrollments.stream()
+                        .map(e -> e.getAcademicClass().getClassId())
+                        .collect(Collectors.toList());
+                } catch(Exception e) {
+                    enrolledClassIds = List.of();
+                }
+            }
+
             for (AcademicClass c : classes) {
                 ClassItem item = new ClassItem(c, c.getClassName());
-                filterClassCombo.addItem(item);
-                classCombo.addItem(item);
+                
+                // --- Xử lý cho Filter ---
+                if (currentStudentId != null) {
+                    // Nếu là Học viên, chỉ hiện các lớp nằm trong ds đăng ký
+                    if (enrolledClassIds != null && enrolledClassIds.contains(c.getClassId())) {
+                        filterClassCombo.addItem(item);
+                    }
+                } else {
+                    // Teacher/Admin/Staff hiện tất cả trong filter
+                    filterClassCombo.addItem(item);
+                }
+                
+                // --- Xử lý cho Form ---
+                if (currentTeacherId != null) {
+                    if (c.getTeacher() != null && c.getTeacher().getTeacherId().equals(currentTeacherId)) {
+                        classCombo.addItem(item);
+                    }
+                } else if (currentStudentId == null) {
+                    // Admin/Staff thì thấy hết trên form
+                    classCombo.addItem(item);
+                }
             }
         }
 
@@ -266,6 +347,22 @@ public class SchedulePanel extends JPanel {
 
     private void loadSchedules() {
         List<Schedule> list = scheduleService.findAll();
+
+        // Lọc danh sách nếu là Học viên
+        Long currentStudentId = UserSession.getStudentId();
+        if (currentStudentId != null && list != null) {
+            try {
+                List<Enrollment> enrollments = enrollmentService.getEnrollmentsByStudentId(currentStudentId);
+                List<Long> enrolledClassIds = enrollments.stream()
+                    .map(e -> e.getAcademicClass().getClassId())
+                    .collect(Collectors.toList());
+                
+                list = list.stream()
+                    .filter(s -> s.getAcademicClass() != null && enrolledClassIds.contains(s.getAcademicClass().getClassId()))
+                    .collect(Collectors.toList());
+            } catch (Exception e) {}
+        }
+        
         updateTable(list);
     }
 
@@ -277,6 +374,21 @@ public class SchedulePanel extends JPanel {
         ClassItem selectedClass = (ClassItem) filterClassCombo.getSelectedItem();
         RoomItem selectedRoom = (RoomItem) filterRoomCombo.getSelectedItem();
         TeacherItem selectedTeacher = (TeacherItem) filterTeacherCombo.getSelectedItem();
+
+        // Lọc danh sách gốc dựa trên quyền là Học viên (Student)
+        Long currentStudentId = UserSession.getStudentId();
+        if (currentStudentId != null) {
+             try {
+                 List<Enrollment> enrollments = enrollmentService.getEnrollmentsByStudentId(currentStudentId);
+                 List<Long> enrolledClassIds = enrollments.stream()
+                     .map(e -> e.getAcademicClass().getClassId())
+                     .collect(Collectors.toList());
+                 
+                 list = list.stream()
+                     .filter(s -> s.getAcademicClass() != null && enrolledClassIds.contains(s.getAcademicClass().getClassId()))
+                     .collect(Collectors.toList());
+             } catch (Exception e) {}
+        }
 
         List<Schedule> filteredList = list.stream().filter(s -> {
             boolean matchClass = selectedClass == null || selectedClass.getAcademicClass() == null ||

@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
 @Table(name = "attendances", uniqueConstraints = {
         @UniqueConstraint(name = "uq_attendances", columnNames = {"student_id", "class_id", "attend_date"})
 })
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

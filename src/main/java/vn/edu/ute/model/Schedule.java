@@ -22,6 +22,7 @@ public class Schedule {
     private Long scheduleId;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
     @JoinColumn(name = "class_id", nullable = false)
     private AcademicClass academicClass;
 
@@ -35,6 +36,7 @@ public class Schedule {
     private LocalTime endTime;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @ToString.Exclude
     @JoinColumn(name = "room_id")
     private Room room;
 
