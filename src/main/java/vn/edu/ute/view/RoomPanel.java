@@ -75,8 +75,7 @@ public class RoomPanel extends JPanel {
         formPanel.add(new JLabel("Trạng thái:"));
         formPanel.add(cbStatus);
         
-        // Trống để căn chỉnh
-        formPanel.add(new JLabel());
+        // Trống để căn chỉnh (đủ 12 ô cho GridLayout 3x4)
         formPanel.add(new JLabel());
         formPanel.add(new JLabel());
 

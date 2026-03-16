@@ -114,12 +114,12 @@ public class TeacherDashboardPanel extends JPanel {
         
         JButton btnAttendance = new JButton("Điểm danh");
         btnAttendance.setBackground(new Color(39, 174, 96));
-        btnAttendance.setForeground(Color.WHITE);
+        btnAttendance.setForeground(Color.BLACK);
         btnAttendance.setFocusPainted(false);
         
         JButton btnScore = new JButton("Nhập điểm");
         btnScore.setBackground(new Color(243, 156, 18));
-        btnScore.setForeground(Color.WHITE);
+        btnScore.setForeground(Color.BLACK);
         btnScore.setFocusPainted(false);
 
         // Mở dialog Điểm danh

@@ -194,7 +194,7 @@ public class StudentFeeDialog extends JDialog {
         btnPay = new JButton("Xác nhận Thanh toán");
         btnPay.setEnabled(false);
         btnPay.setBackground(new Color(46, 204, 113));
-        btnPay.setForeground(Color.WHITE);
+        btnPay.setForeground(Color.BLACK);
         btnPay.setFocusPainted(false);
         btnPay.setFont(new Font("Arial", Font.BOLD, 14));
         btnPay.addActionListener(e -> processPaymentAsync());

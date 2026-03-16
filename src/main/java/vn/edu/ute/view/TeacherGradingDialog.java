@@ -49,6 +49,10 @@ public class TeacherGradingDialog extends JDialog {
     private void initComponents() {
         JPanel pnlTop = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         btnSave = new JButton("Lưu điểm số");
+        btnSave.setBackground(new Color(46, 204, 113));
+        btnSave.setForeground(Color.BLACK);
+        btnSave.setFont(new Font("Arial", Font.BOLD, 13));
+        btnSave.setFocusPainted(false);
         pnlTop.add(btnSave);
         add(pnlTop, BorderLayout.NORTH);
 

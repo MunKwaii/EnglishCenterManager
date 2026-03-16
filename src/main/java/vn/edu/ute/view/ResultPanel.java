@@ -59,7 +59,7 @@ public class ResultPanel extends JPanel {
         
         JButton btnLoad = new JButton("Tải danh sách học viên");
         btnLoad.setBackground(new Color(52, 152, 219));
-        btnLoad.setForeground(Color.WHITE);
+        btnLoad.setForeground(Color.BLACK);
         btnLoad.setFocusPainted(false);
         
         topPanel.add(new JLabel("Chọn Lớp học:"));
@@ -87,7 +87,7 @@ public class ResultPanel extends JPanel {
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton btnSave = new JButton("Lưu Bảng Điểm");
         btnSave.setBackground(new Color(46, 204, 113));
-        btnSave.setForeground(Color.WHITE);
+        btnSave.setForeground(Color.BLACK);
         btnSave.setFont(new Font("Arial", Font.BOLD, 14));
         btnSave.setFocusPainted(false);
         bottomPanel.add(btnSave);

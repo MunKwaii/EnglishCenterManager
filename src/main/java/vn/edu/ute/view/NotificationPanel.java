@@ -268,9 +268,9 @@ public class NotificationPanel extends JPanel {
             loadDataToTable(results);
         });
 
-        // Top 5 thông báo mới nhất
+        // Top 5 thông báo mới nhất (lọc theo role của user hiện tại)
         btnTop5.addActionListener(e -> {
-            List<Notification> top5 = notificationService.getTop5LatestNotifications();
+            List<Notification> top5 = getTop5ForCurrentUser();
             loadDataToTable(top5);
             JOptionPane.showMessageDialog(this, "Đã tải 5 thông báo mới nhất");
         });
@@ -346,6 +346,20 @@ public class NotificationPanel extends JPanel {
         if (forAll != null)
             result.addAll(forAll);
         return result;
+    }
+
+    /**
+     * Lấy top 5 thông báo mới nhất theo role của user hiện tại:
+     * - Admin/Staff: top 5 toàn bộ thông báo
+     * - Student/Teacher: top 5 trong các thông báo dành cho role của họ và All
+     */
+    private List<Notification> getTop5ForCurrentUser() {
+        List<Notification> pool = loadNotificationsForCurrentUser();
+        return pool.stream()
+                .filter(n -> n.getCreatedAt() != null)
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .limit(5)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     private void updateStats() {

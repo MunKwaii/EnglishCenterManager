@@ -45,27 +45,36 @@ public class TeacherAttendanceDialog extends JDialog {
         boolean canTakeAttendance = PermissionUtils.canTakeAttendance(UserSession.getCurrentUser(), currentClass);
         if (!canTakeAttendance) {
             btnSave.setEnabled(false);
-            JOptionPane.showMessageDialog(this, "Bạn không có quyền sửa điểm danh lớp này (Chỉ xem).", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Bạn không có quyền sửa điểm danh lớp này (Chỉ xem).", "Cảnh báo",
+                    JOptionPane.WARNING_MESSAGE);
         }
     }
 
     private void initComponents() {
         JPanel pnlTop = new JPanel(new FlowLayout(FlowLayout.LEFT));
         pnlTop.add(new JLabel("Chọn ngày:"));
-        
+
         spinDate = new JSpinner(new SpinnerDateModel());
         JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(spinDate, "dd/MM/yyyy");
         spinDate.setEditor(dateEditor);
         pnlTop.add(spinDate);
 
         btnLoad = new JButton("Tải điểm danh");
+        btnLoad.setBackground(new Color(52, 152, 219));
+        btnLoad.setForeground(Color.BLACK);
+        btnLoad.setFocusPainted(false);
+
         btnSave = new JButton("Lưu thay đổi");
+        btnSave.setBackground(new Color(46, 204, 113));
+        btnSave.setForeground(Color.BLACK);
+        btnSave.setFocusPainted(false);
+
         pnlTop.add(btnLoad);
         pnlTop.add(btnSave);
 
         add(pnlTop, BorderLayout.NORTH);
 
-        tableModel = new DefaultTableModel(new Object[]{"Mã HV", "Tên Học Viên", "Trạng thái", "Ghi chú"}, 0) {
+        tableModel = new DefaultTableModel(new Object[] { "Mã HV", "Tên Học Viên", "Trạng thái", "Ghi chú" }, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 // Chỉ cho sửa cột Trạng thái (2) và Ghi chú (3) nếu có quyền
@@ -94,7 +103,8 @@ public class TeacherAttendanceDialog extends JDialog {
         try {
             enrollments = enrollmentService.getEnrollmentsByClassId(currentClass.getClassId());
             if (enrollments.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Lớp này hiện chưa có học viên nào.", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Lớp này hiện chưa có học viên nào.", "Thông báo",
+                        JOptionPane.INFORMATION_MESSAGE);
             } else {
                 fetchAttendanceForDate(); // Tải mặc định cho ngày hiện tại
             }
@@ -105,12 +115,14 @@ public class TeacherAttendanceDialog extends JDialog {
     }
 
     private void fetchAttendanceForDate() {
-        if (enrollments == null || enrollments.isEmpty()) return;
-        
+        if (enrollments == null || enrollments.isEmpty())
+            return;
+
         java.util.Date selectedDate = (java.util.Date) spinDate.getValue();
         LocalDate localDate = new java.sql.Date(selectedDate.getTime()).toLocalDate();
 
-        List<Attendance> existingAttendances = attendanceService.getAttendancesByClassIdAndDate(currentClass.getClassId(), localDate);
+        List<Attendance> existingAttendances = attendanceService
+                .getAttendancesByClassIdAndDate(currentClass.getClassId(), localDate);
 
         tableModel.setRowCount(0);
 
@@ -123,7 +135,7 @@ public class TeacherAttendanceDialog extends JDialog {
             AttendanceStatus status = att != null ? att.getStatus() : AttendanceStatus.Present;
             String note = att != null ? att.getNote() : "";
 
-            tableModel.addRow(new Object[]{
+            tableModel.addRow(new Object[] {
                     enr.getStudent().getStudentId(),
                     enr.getStudent().getFullName(),
                     status,
@@ -141,7 +153,8 @@ public class TeacherAttendanceDialog extends JDialog {
         LocalDate localDate = new java.sql.Date(selectedDate.getTime()).toLocalDate();
         List<Attendance> attendancesToSave = new ArrayList<>();
 
-        List<Attendance> existingAttendances = attendanceService.getAttendancesByClassIdAndDate(currentClass.getClassId(), localDate);
+        List<Attendance> existingAttendances = attendanceService
+                .getAttendancesByClassIdAndDate(currentClass.getClassId(), localDate);
 
         for (int i = 0; i < tableModel.getRowCount(); i++) {
             Long studentId = (Long) tableModel.getValueAt(i, 0);
@@ -155,13 +168,15 @@ public class TeacherAttendanceDialog extends JDialog {
                     .note(note);
 
             // Tìm Enrollment
-            Enrollment currentEnr = enrollments.stream().filter(e -> e.getStudent().getStudentId().equals(studentId)).findFirst().orElse(null);
-            if(currentEnr != null) {
+            Enrollment currentEnr = enrollments.stream().filter(e -> e.getStudent().getStudentId().equals(studentId))
+                    .findFirst().orElse(null);
+            if (currentEnr != null) {
                 builder.student(currentEnr.getStudent());
             }
 
             // Gắn ID nếu đã tồn tại để thực hiện Update
-            Attendance existing = existingAttendances.stream().filter(a -> a.getStudent().getStudentId().equals(studentId)).findFirst().orElse(null);
+            Attendance existing = existingAttendances.stream()
+                    .filter(a -> a.getStudent().getStudentId().equals(studentId)).findFirst().orElse(null);
             if (existing != null) {
                 builder.attendanceId(existing.getAttendanceId());
             }
@@ -171,7 +186,8 @@ public class TeacherAttendanceDialog extends JDialog {
 
         boolean success = attendanceService.saveAllAttendances(attendancesToSave);
         if (success) {
-            JOptionPane.showMessageDialog(this, "Đã lưu điểm danh thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Đã lưu điểm danh thành công!", "Thành công",
+                    JOptionPane.INFORMATION_MESSAGE);
             fetchAttendanceForDate(); // Refresh
         } else {
             JOptionPane.showMessageDialog(this, "Lỗi khi lưu điểm danh.", "Lỗi", JOptionPane.ERROR_MESSAGE);
